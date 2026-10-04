@@ -1,0 +1,420 @@
+% =============================================================================
+%  deepcopy benchmark - optimization slides (7 frames, no title / no intro)
+%
+%  Build:  pdflatex slides_deepcopy.tex     (run twice for the frame numbers)
+%
+%  IMAGES: every figure is a placeholder box drawn by \imgph{height}{caption}.
+%          To drop in a real picture, put the file in figures/ and swap the
+%          \imgph{...}{...} line for the \includegraphics line commented out
+%          directly above it.
+% =============================================================================
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{default}
+\usecolortheme{seahorse}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+\setbeamertemplate{itemize items}[circle]
+\setbeamercolor{frametitle}{fg=accent!90!black}
+\setbeamerfont{frametitle}{size=\large,series=\bfseries}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+
+% \graphicspath{{figures/}}   % <- uncomment once you add real images
+
+% ---- colours ---------------------------------------------------------------
+\definecolor{accent}{HTML}{1F4E79}
+\definecolor{good}{HTML}{1B7F3B}
+\definecolor{bad}{HTML}{B3261E}
+\definecolor{codebg}{HTML}{F5F5F3}
+\definecolor{rulegray}{HTML}{888888}
+
+% ---- image placeholder -----------------------------------------------------
+% \imgph[width]{height}{caption}
+\newcommand{\imgph}[3][0.78\textwidth]{%
+  \begin{center}
+  \setlength{\fboxsep}{0pt}%
+  {\color{rulegray}\fbox{%
+    \begin{minipage}[c][#2][c]{#1}
+      \centering\ttfamily\scriptsize\color{rulegray}
+      [\,IMAGE PLACEHOLDER\,]\\[3pt]
+      \normalfont\itshape #3
+    \end{minipage}}}
+  \end{center}}
+
+% ---- code styles -----------------------------------------------------------
+\lstdefinestyle{py}{
+  language=Python, basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{accent}\bfseries, commentstyle=\color{good}\itshape,
+  stringstyle=\color{bad}, showstringspaces=false,
+  backgroundcolor=\color{codebg}, frame=none, xleftmargin=4pt,
+  breaklines=true, columns=fullflexible, aboveskip=3pt, belowskip=3pt}
+\lstdefinestyle{c}{
+  language=C, basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{accent}\bfseries, commentstyle=\color{good}\itshape,
+  stringstyle=\color{bad}, showstringspaces=false,
+  backgroundcolor=\color{codebg}, frame=none, xleftmargin=4pt,
+  breaklines=true, columns=fullflexible, aboveskip=3pt, belowskip=3pt}
+
+\newcommand{\up}[1]{\textcolor{good}{\textbf{#1}}}
+\newcommand{\down}[1]{\textcolor{bad}{\textbf{#1}}}
+
+\begin{document}
+
+% =============================================================================
+\begin{frame}{The benchmark: what is actually being measured}
+\small
+\texttt{pyperformance/bm\_deepcopy} registers \textbf{three} independent timed
+workloads:
+
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Sub-benchmark} & \textbf{Payload} & \textbf{What it stresses} \\
+\midrule
+\texttt{deepcopy} & small dict + a dataclass \texttt{A} & the everyday case \\
+\texttt{deepcopy\_reduce} & object defining \texttt{\_\_reduce\_\_} & the pickle-protocol path \\
+\texttt{deepcopy\_memo} & \texttt{\{'a':(L,L,L), 'b':[L]*100\}} & the memo (shared refs) \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{4pt}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\footnotesize\textbf{Architecture of the module}
+\begin{itemize}\scriptsize
+  \item Each workload is a plain function \texttt{benchmark*(n)}.
+  \item \texttt{pyperf.perf\_counter()} brackets \emph{only} the
+        \texttt{copy.deepcopy} calls --- loop and setup cost are excluded.
+  \item Registered via \texttt{runner.bench\_time\_func('<name>', fn)};
+        \texttt{pyperf} calibrates the loop count, then runs
+        20 processes $\times$ 3 values.
+  \item In \texttt{deepcopy\_memo} one 100-element list appears
+        \textbf{103 times} --- a correct copy must yield \emph{one} new list
+        shared by all 103 slots.
+\end{itemize}
+\end{column}
+\begin{column}{0.43\textwidth}
+% \includegraphics[width=\textwidth]{figures/architecture.pdf}
+\imgph[\textwidth]{2.8cm}{Module architecture / repo layout}
+\end{column}
+\end{columns}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{How the built-in \texttt{copy.deepcopy} works}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
+\footnotesize
+For every object it visits, \texttt{copy.py} does:
+\begin{enumerate}\scriptsize
+  \item \textbf{memo lookup} --- \texttt{memo[id(x)]}; if present, return the
+        existing copy. This is what preserves shared references and
+        terminates on cycles.
+  \item \textbf{dispatch} --- \texttt{\_deepcopy\_dispatch[type(x)]}, an
+        \emph{exact-type} dict: atomics return \texttt{x} itself,
+        list/tuple/dict get dedicated copiers.
+  \item \textbf{fallback} --- \texttt{\_\_deepcopy\_\_} hook, else
+        \texttt{\_\_reduce\_ex\_\_(4)} $\rightarrow$ \texttt{\_reconstruct()}.
+  \item \textbf{memoize} + \texttt{\_keep\_alive}.
+\end{enumerate}
+\vspace{2pt}
+\scriptsize
+\textbf{The cost:} \texttt{copy.py} is \emph{pure Python} and recurses
+\textbf{once per element}. Copying \texttt{[1]*100} costs 100 Python calls that
+each allocate a frame, hash a type and probe the memo --- only to return the
+integer unchanged.
+\end{column}
+\begin{column}{0.46\textwidth}
+\begin{lstlisting}[style=py]
+def deepcopy(x, memo=None, _nil=[]):
+    if memo is None: memo = {}
+    d = id(x)
+    y = memo.get(d, _nil)
+    if y is not _nil:
+        return y             # shared ref
+    cls = type(x)
+    copier = _deepcopy_dispatch.get(cls)
+    if copier is not None:
+        y = copier(x, memo)
+    else: ...        # or __reduce_ex__
+    if y is not x:
+        memo[d] = y
+        _keep_alive(x, memo)
+    return y
+\end{lstlisting}
+% \includegraphics[width=\textwidth]{figures/deepcopy_flow.pdf}
+\imgph[\textwidth]{0.95cm}{Dispatch / recursion flow}
+\end{column}
+\end{columns}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Where the time goes: profile and counters}
+\begin{columns}[T]
+\begin{column}{0.47\textwidth}
+% \includegraphics[width=\textwidth]{figures/flamegraph_baseline.png}
+\imgph[\textwidth]{3.6cm}{Baseline flame graph\\(\texttt{pyspy\_flamegraph\_baseline.svg})}
+\scriptsize
+Widest Python frames, 7{,}188 samples:\\
+\texttt{deepcopy} 238 \textbar{} \texttt{\_deepcopy\_dict} 123 \textbar{}
+\texttt{\_deepcopy\_list} 66 \textbar{} \texttt{\_reconstruct} 64 \textbar{}
+\texttt{\_deepcopy\_tuple} 39 --- all of it inside \texttt{copy.py}.
+\end{column}
+\begin{column}{0.51\textwidth}
+\footnotesize
+\textbf{\texttt{perf} self-time, baseline}
+\begin{center}
+\begin{tabular}{@{}rl@{}}
+\toprule
+\textbf{Self} & \textbf{Symbol} \\
+\midrule
+20.95\% & \texttt{\_PyEval\_EvalFrameDefault} \\
+ 5.19\% & \texttt{call\_function} \\
+ 2.66\% & \texttt{\_PyEval\_MakeFrameVector} \\
+ 2.30\% & \texttt{\_PyObject\_VectorcallTstate} \\
+ 2.07\% & \texttt{lookdict} \\
+ 1.87\% & \texttt{frame\_dealloc} \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{-4pt}
+\scriptsize
+\textbf{Reading:} no hashing, no big \texttt{memcpy}, no cache thrashing ---
+it is \emph{frame creation, frame teardown and bytecode dispatch}.
+\\[3pt]
+\textbf{IPC = 2.28} confirms it: the baseline is not stalling on memory, it is
+simply \textbf{executing too many instructions}
+(\up{196{,}381} instructions per \texttt{deepcopy}).
+\\[3pt]
+\textit{Note:} \texttt{--call-graph fp} yields \emph{no} usable stacks on an
+\texttt{-Og} debug build; \texttt{dwarf} was required.
+\end{column}
+\end{columns}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{\texttt{fastdeepcopy}: a C walker for built-in containers}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\footnotesize
+Re-implements the traversal in C for \texttt{dict}, \texttt{list},
+\texttt{tuple} and atomic immutables. The win is \emph{not} ``C is fast'' ---
+it is that recursion no longer costs \textbf{a Python stack frame per
+element}.
+
+\vspace{5pt}
+\textbf{Correctness obligations (refcounting / GC):}
+\begin{itemize}\scriptsize
+  \item \textbf{Shared memo} with \texttt{copy.deepcopy}, so the fallback path
+        stays consistent.
+  \item \textbf{\texttt{\_keep\_alive} mirrored} --- without it a temporary
+        original can be collected mid-copy and its \texttt{id()} \emph{reused},
+        silently aliasing two unrelated copies.
+  \item \textbf{Strict refcount discipline}:
+        \texttt{PyTuple\_SET\_ITEM} steals, \texttt{PyList\_GET\_ITEM} borrows.
+  \item \textbf{\texttt{Py\_EnterRecursiveCall}} guards the C stack.
+  \item New lists are \textbf{pre-filled with \texttt{None}} --- never
+        \texttt{NULL} slots reachable through the memo.
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{lstlisting}[style=c]
+/* Mirror of copy._keep_alive(): pin the
+   original so its id() cannot be recycled
+   while the copy is still in progress. */
+static int
+keep_alive(PyObject *x, PyObject *memo)
+{
+    PyObject *k = PyLong_FromVoidPtr(memo);
+    PyObject *lst =                /* borrowed */
+        PyDict_GetItemWithError(memo, k);
+    if (lst != NULL) {
+        int rc = PyList_Append(lst, x);
+        Py_DECREF(k);
+        return rc;
+    }
+    ...
+}
+\end{lstlisting}
+\vspace{1pt}
+\scriptsize
+Checked on a \texttt{Py\_DEBUG} build:
+\texttt{sys.gettotalrefcount()} drifts by \textbf{2} over 500 copies of a
+nested structure --- no leak.
+\end{column}
+\end{columns}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Fast path, not a replacement: delegation to \texttt{copy.py}}
+\begin{columns}[T]
+\begin{column}{0.51\textwidth}
+\footnotesize
+Three gates, in order:
+\begin{enumerate}\scriptsize
+  \item \textbf{Exact type only.} \texttt{Py\_IS\_TYPE(x, \&PyDict\_Type)},
+        never \texttt{PyDict\_Check} --- a \texttt{dict} subclass may carry
+        state only \texttt{\_\_reduce\_ex\_\_} knows about, so it must take the
+        generic route.
+  \item \textbf{\texttt{\_\_deepcopy\_\_} hook} is honoured exactly as
+        \texttt{copy.py} does, so class-level optimizations still work through
+        the C path.
+  \item \textbf{Everything else is delegated} to
+        \texttt{copy.deepcopy(x, memo)} --- \emph{with the same memo object},
+        so identity and cycle handling stay globally consistent.
+\end{enumerate}
+\vspace{2pt}
+\scriptsize
+Tuples reproduce \texttt{\_deepcopy\_tuple}'s subtle rule: if no element
+actually changed, \textbf{return the original tuple}.
+\vspace{2pt}
+
+\textbf{Net effect:} unknown input is never handled \emph{differently}, only
+known input is handled \emph{faster}.
+\end{column}
+\begin{column}{0.47\textwidth}
+\begin{lstlisting}[style=c]
+if (t == &PyList_Type)
+    return deepcopy_list(x, memo);
+if (t == &PyDict_Type)
+    return deepcopy_dict(x, memo);
+if (t == &PyTuple_Type)
+    return deepcopy_tuple(x, memo);
+/* user hook, like copy.deepcopy does */
+hook = PyObject_GetAttr(x, str_deepcopy_hook);
+if (hook != NULL) { ... }
+/* anything else: hand it to the stdlib,
+   sharing our memo */
+return PyObject_CallFunctionObjArgs(
+           copy_deepcopy, x, memo, NULL);
+\end{lstlisting}
+% \includegraphics[width=\textwidth]{figures/dispatch.pdf}
+\imgph[\textwidth]{0.95cm}{Fast path vs.\ delegation}
+\end{column}
+\end{columns}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Optimization at the Python class level}
+\small
+A class that knows its own layout can copy itself far more cheaply than the
+generic \texttt{\_\_reduce\_ex\_\_}\,/\,\texttt{\_reconstruct} machinery.
+\vspace{2pt}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\centering\footnotesize\textcolor{bad}{\textbf{Fast but WRONG}}
+\begin{lstlisting}[style=py]
+def __deepcopy__(self, memo):
+    new_lst = self.lst.copy()   # shallow!
+    new_obj = A(self.string,
+                new_lst,
+                self.boolean)
+    memo[id(self)] = new_obj
+    return new_obj
+\end{lstlisting}
+\scriptsize
+\begin{itemize}\scriptsize
+  \item nested mutables stay \textbf{shared} with the original
+  \item a subclass is silently downgraded to \texttt{A}
+  \item self-referential objects break
+\end{itemize}
+\end{column}
+\begin{column}{0.50\textwidth}
+\centering\footnotesize\textcolor{good}{\textbf{Fast and CORRECT}}
+\begin{lstlisting}[style=py]
+def __deepcopy__(self, memo):
+    cls = self.__class__
+    new = cls.__new__(cls)     # keeps subclass
+    memo[id(self)] = new       # BEFORE recursing
+    new.string  = self.string   # share
+    new.boolean = self.boolean  # share
+    new.lst = deepcopy(self.lst, memo)
+    return new
+\end{lstlisting}
+\scriptsize
+Every line is load-bearing: \texttt{\_\_new\_\_} preserves subclasses,
+early memo registration makes cycles terminate, and the recursive call is
+what makes it an actual \emph{deep} copy.
+\end{column}
+\end{columns}
+\vspace{3pt}
+\footnotesize
+Applied to the dataclass \texttt{A} and to the \texttt{\_\_reduce\_\_} class in
+\texttt{deepcopy\_reduce}. Guarded by \textbf{47 assertions} that run the same
+suite against the \emph{real} classes imported from the benchmark --- putting
+the shallow \texttt{.copy()} back fails four of them.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Performance evaluation}
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\footnotesize
+\textbf{Execution time} (\texttt{pyperf}, 20 proc.\ $\times$ 3 values)
+\vspace{2pt}
+\centering
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+& \textbf{Base} & \textbf{Opt.} & \textbf{Gain} \\
+\midrule
+\texttt{deepcopy}        & 2.00\,ms & 372\,\textmu s & \up{5.39$\times$} \\
+\texttt{deepcopy\_reduce}& 18.2\,\textmu s & 4.73\,\textmu s & \up{3.85$\times$} \\
+\texttt{deepcopy\_memo}  & 233\,\textmu s & 45.4\,\textmu s & \up{5.13$\times$} \\
+\midrule
+\textbf{Geo.\ mean}      &          &          & \up{4.74$\times$} \\
+\bottomrule
+\end{tabular}
+\vspace{4pt}
+\raggedright\scriptsize
+Requirement was \textbf{7\%}; the weakest row is \textbf{74\%}.
+\vspace{4pt}
+% \includegraphics[width=\textwidth]{figures/flamegraph_opt.png}
+\imgph[\textwidth]{2.0cm}{Optimized flame graph --- \texttt{copy.py} is gone}
+\end{column}
+\begin{column}{0.49\textwidth}
+\footnotesize
+\textbf{Hardware counters} --- identical \textbf{fixed} work
+(340{,}000 copies, \texttt{perf stat -r 3})
+\vspace{2pt}
+\centering
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+& \textbf{Base} & \textbf{Opt.} & $\Delta$ \\
+\midrule
+Wall time      & 12.71\,s & 2.78\,s & \up{$-$78.2\%} \\
+Cycles         & 29.41\,G & 6.40\,G & \up{$-$78.2\%} \\
+Instructions   & 66.77\,G & 15.03\,G& \up{$-$77.5\%} \\
+Branches       & 13.41\,G & 3.30\,G & \up{$-$75.4\%} \\
+Branch misses  & 54.90\,M & 6.65\,M & \up{$-$87.9\%} \\
+Cache refs     & 23.45\,M & 3.51\,M & \up{$-$85.0\%} \\
+IPC            & 2.28     & 2.35    & $+$3\% \\
+\bottomrule
+\end{tabular}
+\vspace{3pt}
+\vspace{2pt}
+\raggedright\scriptsize
+\textbf{Instructions per copy: 196{,}381 $\rightarrow$ 44{,}195.}
+\vspace{3pt}
+
+\textcolor{bad}{\textbf{Measurement trap:}} \texttt{perf stat} over the whole
+\texttt{pyperf} run is \emph{invalid}: \texttt{pyperf} calibrates the loop
+count to a \emph{time budget}, so 5$\times$ faster code performs
+$\sim$5$\times$ more copies and appears to use \down{more} instructions
+(316\,G vs 235\,G). Hence the fixed-work driver.
+\vspace{2pt}
+
+IPC barely moving is the point: we did not make the machine run
+\emph{better}, we gave it \emph{less to do}.
+\end{column}
+\end{columns}
+\end{frame}
+
+\end{document}

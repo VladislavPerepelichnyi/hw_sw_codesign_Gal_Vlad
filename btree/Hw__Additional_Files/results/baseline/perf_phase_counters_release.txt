@@ -1,0 +1,19 @@
+note: not available on this PMU, shown as n/a: LLC loads, LLC misses
+hardware counters per phase, one loop of run_once, user space only (perf_event_open; cpython 3.12.15, N = 200,000)
+
+  phase                                                cycles    instr   IPC   L1D ld  L1D miss     %   LLC ld  LLC miss     %
+  ----------------------------------------------------------------------------------------------------------------------------
+  1 build (insert 200k)                                3.35 G   7.13 G  2.13   2.11 G     0.0 M  0.00    n/a       n/a     n/a
+  2 delete 40k                                         0.36 G   0.98 G  2.76   0.28 G     0.0 M  0.00    n/a       n/a     n/a
+  3 re-insert 40k                                      0.90 G   1.89 G  2.11   0.56 G     0.0 M  0.00    n/a       n/a     n/a
+  4 gc.collect()                                       0.25 G   0.16 G  0.61   0.05 G     0.0 M  0.00    n/a       n/a     n/a
+  5 iterate all + lookup each (reads node.d)           2.07 G   5.68 G  2.75   1.68 G     0.0 M  0.00    n/a       n/a     n/a
+  6 random lookups 10k (reads node.d)                  0.16 G   0.33 G  2.08   0.10 G     0.0 M  0.00    n/a       n/a     n/a
+  total, phases 1-6 (= the timed loop)                 7.08 G  16.17 G  2.28   4.78 G     0.0 M  0.00    n/a       n/a     n/a
+
+  diagnostics (not part of the loop):
+  D1 iterate all + lookup each, records NOT read       2.03 G   5.65 G  2.78   1.67 G     0.0 M  0.00    n/a       n/a     n/a
+  D2 touch every record once (no tree)                 0.02 G   0.05 G  2.70   0.02 G     0.0 M  0.00    n/a       n/a     n/a
+  D3 build (insert 200k) with automatic GC disabled    2.82 G   6.82 G  2.42   2.01 G     5.5 M  0.27    n/a       n/a     n/a
+
+  (LLC events not available on this PMU: no per-phase LLC-miss attribution)

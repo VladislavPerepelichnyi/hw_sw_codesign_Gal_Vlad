@@ -1,0 +1,56 @@
+===========================================================
+ FIXED-WORK HARDWARE COUNTERS - identical work on both sides
+ (the only valid counter comparison; see DEEPCOPY_REPORT.md)
+===========================================================
+
+--- BASELINE ---
+# started on Sat Oct  3 11:16:51 2026
+
+
+ Performance counter stats for '/root/final_project_HW-SW_co_design/Hw_Additional_Files/venv/bin/python fixed_work.py --impl baseline' (3 runs):
+
+          12709.56 msec cpu-clock                 #    1.000 CPUs utilized            ( +-  0.13% )
+          12709.58 msec task-clock                #    1.000 CPUs utilized            ( +-  0.13% )
+       29408222107      cycles                    #    2.319 GHz                      ( +-  0.17% )  (74.96%)
+       66769411576      instructions              #    2.28  insn per cycle           ( +-  0.19% )  (87.48%)
+       13408994262      branch-instructions       #    1.057 G/sec                    ( +-  0.19% )  (87.47%)
+          54904858      branch-misses             #    0.41% of all branches          ( +-  0.53% )  (87.51%)
+        1056266239      bus-cycles                #   83.290 M/sec                    ( +-  0.20% )  (87.56%)
+          23451150      cache-references          #    1.849 M/sec                    ( +-  7.06% )  (87.51%)
+             27677      cache-misses              #    0.127 % of all cache refs      ( +-119.35% )  (49.95%)
+       29392707812      ref-cycles                #    2.318 G/sec                    ( +-  0.17% )  (62.44%)
+              1936      page-faults               #  152.660 /sec                     ( +-  0.05% )
+              1936      minor-faults              #  152.660 /sec                     ( +-  0.05% )
+                 0      major-faults              #    0.000 /sec                   
+               103      context-switches          #    8.122 /sec                     ( +-  5.89% )
+   <not supported>      LLC-loads                                                   
+   <not supported>      LLC-stores                                                  
+
+          12.70965 +- 0.00726 seconds time elapsed  ( +-  0.06% )
+
+
+--- OPTIMIZED ---
+# started on Sat Oct  3 11:17:29 2026
+
+
+ Performance counter stats for '/root/final_project_HW-SW_co_design/Hw_Additional_Files/venv/bin/python fixed_work.py --impl optimized' (3 runs):
+
+           2762.99 msec cpu-clock                 #    0.995 CPUs utilized            ( +-  0.34% )
+           2762.99 msec task-clock                #    0.995 CPUs utilized            ( +-  0.34% )
+        6400511926      cycles                    #    2.316 GHz                      ( +-  0.46% )  (74.83%)
+       15026256487      instructions              #    2.35  insn per cycle           ( +-  0.21% )  (87.42%)
+        3296804232      branch-instructions       #    1.193 G/sec                    ( +-  0.20% )  (87.51%)
+           6654348      branch-misses             #    0.20% of all branches          ( +-  2.32% )  (87.56%)
+         229843319      bus-cycles                #   83.168 M/sec                    ( +-  0.35% )  (87.56%)
+           3508094      cache-references          #    1.269 M/sec                    ( +-  3.44% )  (87.56%)
+              8346      cache-misses              #    0.242 % of all cache refs      ( +-114.55% )  (49.80%)
+        6394452716      ref-cycles                #    2.314 G/sec                    ( +-  0.50% )  (62.21%)
+              1899      page-faults               #  687.145 /sec                     ( +-  0.03% )
+              1899      minor-faults              #  687.145 /sec                     ( +-  0.03% )
+                 0      major-faults              #    0.000 /sec                   
+                40      context-switches          #   14.474 /sec                     ( +- 26.78% )
+   <not supported>      LLC-loads                                                   
+   <not supported>      LLC-stores                                                  
+
+           2.77685 +- 0.00793 seconds time elapsed  ( +-  0.29% )
+

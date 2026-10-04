@@ -1,0 +1,21 @@
+# Environment created by ./script_deepcopy.sh (step "venv")
+venv/
+Hw_Additional_Files/FlameGraph/
+
+# Build artifacts of the fastdeepcopy C extension
+Hw_Additional_Files/fastdeepcopy/build/
+Hw_Additional_Files/fastdeepcopy/*.so
+Hw_Additional_Files/fastdeepcopy/.build-stamp
+__pycache__/
+
+# Raw perf traces. With --call-graph dwarf these are 40-50 MB each and are
+# fully regenerable (./script_deepcopy.sh flamegraph). The derived artifacts
+# the report cites (perf_report_*.txt, perf_*stat*.txt, *.svg, *.json) ARE
+# tracked.
+Hw_Additional_Files/perf_results/**/*.data
+Hw_Additional_Files/perf_results/**/*.data.old
+
+# Per-run logs written by the script
+Hw_Additional_Files/logs/
+Hw_Additional_Files/hw/*.vvp
+Hw_Additional_Files/hw/*.log

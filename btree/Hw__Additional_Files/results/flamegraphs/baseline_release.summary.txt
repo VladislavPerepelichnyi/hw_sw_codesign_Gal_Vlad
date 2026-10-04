@@ -1,0 +1,39 @@
+file: results/flamegraphs/baseline_release.folded   total samples: 19046000000
+
+python function (inclusive)               samples      %
+BNode.insert_item                        26000000    0.1
+BNode.get_position                       14000000    0.1
+BTree.__iter__                           14000000    0.1
+BNode.search                              6000000    0.0
+BTree.__setitem__                         6000000    0.0
+BNode.__iter__                            4000000    0.0
+BNode.is_leaf                             4000000    0.0
+BNode.delete.<locals>.is_big              2000000    0.0
+BNode.is_full                             2000000    0.0
+BTree.__delitem__                         2000000    0.0
+BTree.iterkeys                            2000000    0.0
+_compile                                  2000000    0.0
+make_records                              2000000    0.0
+
+CPython subsystem (inclusive, any frame)  samples      %
+list iteration (listiter_next/enum_next) 1882000000    9.9
+GC (gc_collect_main & visitors)          1152000000    6.0
+allocator (PyObject_Malloc/Free, _PyMem_) 388000000    2.0
+list.insert / ins1 / memmove             52000000    0.3
+
+leaf symbol (self)                        samples      %
+_PyEval_EvalFrameDefault                 9858000000   51.8
+listiter_next.lto_priv.0                 1164000000    6.1
+enum_next.lto_priv.0                     718000000    3.8
+gc_collect_main.lto_priv.0               628000000    3.3
+visit_reachable.lto_priv.0               524000000    2.8
+_PyFunction_Vectorcall                   494000000    2.6
+_PyEvalFrameClearAndPop.lto_priv.0       488000000    2.6
+deduce_unreachable                       430000000    2.3
+py_trampoline_evaluator.lto_priv.0       328000000    1.7
+PyObject_GC_Del                          302000000    1.6
+initialize_locals.lto_priv.0             290000000    1.5
+subtype_traverse.lto_priv.0              226000000    1.2
+tupletraverse.lto_priv.0                 214000000    1.1
+list_traverse.lto_priv.0                 198000000    1.0
+PyType_GenericAlloc                      166000000    0.9

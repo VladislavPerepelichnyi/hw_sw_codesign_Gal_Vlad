@@ -1,0 +1,7 @@
+RSS: baseline 19.2 MB -> +records 87.3 MB -> +tree 110.4 MB
+records (200k Record objects + attrs): 68.1 MB
+tree structure RSS delta:              23.2 MB
+tree structure by getsizeof: 18.9 MB = nodes 0.5 + lists 2.4 + item tuples 10.7 + key int objects 5.3   (10,150 nodes, 200,000 items)
+key int objects that are NOT the interned small-int cache: 199743 of 200000
+per-compared-key pointer chain: items list -> tuple -> int object -> value  (3 dependent loads, 56 B tuple, 28 B int)
+caches: L1d 32K/core, L2 4096K/core, L3 16384K/socket (Intel Xeon E5-2630 v3 @ 2.40GHz)

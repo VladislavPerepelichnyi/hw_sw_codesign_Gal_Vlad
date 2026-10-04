@@ -1,0 +1,795 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" width="100%" onload="init(evt)" viewBox="0 0 1400 270" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<!-- Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples. -->
+<!-- NOTES:  -->
+<defs>
+	<linearGradient id="background" y1="0" y2="1" x1="0" x2="0" >
+		<stop stop-color="#eeeeee" offset="5%" />
+		<stop stop-color="#eeeeb0" offset="95%" />
+	</linearGradient>
+</defs>
+<style type="text/css">
+	text { font-family:Verdana; font-size:12px; fill:rgb(0,0,0); }
+	#search, #ignorecase { opacity:0.1; cursor:pointer; }
+	#search:hover, #search.show, #ignorecase:hover, #ignorecase.show { opacity:1; }
+	#subtitle { text-anchor:middle; font-color:rgb(160,160,160); }
+	#title { text-anchor:middle; font-size:17px}
+	#unzoom { cursor:pointer; }
+	#frames > *:hover { stroke:black; stroke-width:0.5; cursor:pointer; }
+	.hide { display:none; }
+	.parent { opacity:0.5; }
+</style>
+<script type="text/ecmascript">
+<![CDATA[
+	"use strict";
+	var details, searchbtn, unzoombtn, matchedtxt, svg, searching, currentSearchTerm, ignorecase, ignorecaseBtn;
+	function init(evt) {
+		details = document.getElementById("details").firstChild;
+		searchbtn = document.getElementById("search");
+		ignorecaseBtn = document.getElementById("ignorecase");
+		unzoombtn = document.getElementById("unzoom");
+		matchedtxt = document.getElementById("matched");
+		svg = document.getElementsByTagName("svg")[0];
+		searching = 0;
+		currentSearchTerm = null;
+
+		// use GET parameters to restore a flamegraphs state.
+		var params = get_params();
+		if (params.x && params.y)
+			zoom(find_group(document.querySelector('[x="' + params.x + '"][y="' + params.y + '"]')));
+                if (params.s) search(params.s);
+	}
+
+	// event listeners
+	window.addEventListener("click", function(e) {
+		var target = find_group(e.target);
+		if (target) {
+			if (target.nodeName == "a") {
+				if (e.ctrlKey === false) return;
+				e.preventDefault();
+			}
+			if (target.classList.contains("parent")) unzoom(true);
+			zoom(target);
+			if (!document.querySelector('.parent')) {
+				// we have basically done a clearzoom so clear the url
+				var params = get_params();
+				if (params.x) delete params.x;
+				if (params.y) delete params.y;
+				history.replaceState(null, null, parse_params(params));
+				unzoombtn.classList.add("hide");
+				return;
+			}
+
+			// set parameters for zoom state
+			var el = target.querySelector("rect");
+			if (el && el.attributes && el.attributes.y && el.attributes._orig_x) {
+				var params = get_params()
+				params.x = el.attributes._orig_x.value;
+				params.y = el.attributes.y.value;
+				history.replaceState(null, null, parse_params(params));
+			}
+		}
+		else if (e.target.id == "unzoom") clearzoom();
+		else if (e.target.id == "search") search_prompt();
+		else if (e.target.id == "ignorecase") toggle_ignorecase();
+	}, false)
+
+	// mouse-over for info
+	// show
+	window.addEventListener("mouseover", function(e) {
+		var target = find_group(e.target);
+		if (target) details.nodeValue = "Function: " + g_to_text(target);
+	}, false)
+
+	// clear
+	window.addEventListener("mouseout", function(e) {
+		var target = find_group(e.target);
+		if (target) details.nodeValue = ' ';
+	}, false)
+
+	// ctrl-F for search
+	// ctrl-I to toggle case-sensitive search
+	window.addEventListener("keydown",function (e) {
+		if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) {
+			e.preventDefault();
+			search_prompt();
+		}
+		else if (e.ctrlKey && e.keyCode === 73) {
+			e.preventDefault();
+			toggle_ignorecase();
+		}
+	}, false)
+
+	// functions
+	function get_params() {
+		var params = {};
+		var paramsarr = window.location.search.substr(1).split('&');
+		for (var i = 0; i < paramsarr.length; ++i) {
+			var tmp = paramsarr[i].split("=");
+			if (!tmp[0] || !tmp[1]) continue;
+			params[tmp[0]]  = decodeURIComponent(tmp[1]);
+		}
+		return params;
+	}
+	function parse_params(params) {
+		var uri = "?";
+		for (var key in params) {
+			uri += key + '=' + encodeURIComponent(params[key]) + '&';
+		}
+		if (uri.slice(-1) == "&")
+			uri = uri.substring(0, uri.length - 1);
+		if (uri == '?')
+			uri = window.location.href.split('?')[0];
+		return uri;
+	}
+	function find_child(node, selector) {
+		var children = node.querySelectorAll(selector);
+		if (children.length) return children[0];
+	}
+	function find_group(node) {
+		var parent = node.parentElement;
+		if (!parent) return;
+		if (parent.id == "frames") return node;
+		return find_group(parent);
+	}
+	function orig_save(e, attr, val) {
+		if (e.attributes["_orig_" + attr] != undefined) return;
+		if (e.attributes[attr] == undefined) return;
+		if (val == undefined) val = e.attributes[attr].value;
+		e.setAttribute("_orig_" + attr, val);
+	}
+	function orig_load(e, attr) {
+		if (e.attributes["_orig_"+attr] == undefined) return;
+		e.attributes[attr].value = e.attributes["_orig_" + attr].value;
+		e.removeAttribute("_orig_"+attr);
+	}
+	function g_to_text(e) {
+		var text = find_child(e, "title").firstChild.nodeValue;
+		return (text)
+	}
+	function g_to_func(e) {
+		var func = g_to_text(e);
+		// if there's any manipulation we want to do to the function
+		// name before it's searched, do it here before returning.
+		return (func);
+	}
+	function update_text(e) {
+		var r = find_child(e, "rect");
+		var t = find_child(e, "text");
+		var w = parseFloat(r.attributes.width.value) -3;
+		var txt = find_child(e, "title").textContent.replace(/\([^(]*\)$/,"");
+		t.attributes.x.value = parseFloat(r.attributes.x.value) + 3;
+
+		// Smaller than this size won't fit anything
+		if (w < 2 * 12 * 0.59) {
+			t.textContent = "";
+			return;
+		}
+
+		t.textContent = txt;
+		var sl = t.getSubStringLength(0, txt.length);
+		// check if only whitespace or if we can fit the entire string into width w
+		if (/^ *$/.test(txt) || sl < w)
+			return;
+
+		// this isn't perfect, but gives a good starting point
+		// and avoids calling getSubStringLength too often
+		var start = Math.floor((w/sl) * txt.length);
+		for (var x = start; x > 0; x = x-2) {
+			if (t.getSubStringLength(0, x + 2) <= w) {
+				t.textContent = txt.substring(0, x) + "..";
+				return;
+			}
+		}
+		t.textContent = "";
+	}
+
+	// zoom
+	function zoom_reset(e) {
+		if (e.attributes != undefined) {
+			orig_load(e, "x");
+			orig_load(e, "width");
+		}
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_reset(c[i]);
+		}
+	}
+	function zoom_child(e, x, ratio) {
+		if (e.attributes != undefined) {
+			if (e.attributes.x != undefined) {
+				orig_save(e, "x");
+				e.attributes.x.value = (parseFloat(e.attributes.x.value) - x - 10) * ratio + 10;
+				if (e.tagName == "text")
+					e.attributes.x.value = find_child(e.parentNode, "rect[x]").attributes.x.value + 3;
+			}
+			if (e.attributes.width != undefined) {
+				orig_save(e, "width");
+				e.attributes.width.value = parseFloat(e.attributes.width.value) * ratio;
+			}
+		}
+
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_child(c[i], x - 10, ratio);
+		}
+	}
+	function zoom_parent(e) {
+		if (e.attributes) {
+			if (e.attributes.x != undefined) {
+				orig_save(e, "x");
+				e.attributes.x.value = 10;
+			}
+			if (e.attributes.width != undefined) {
+				orig_save(e, "width");
+				e.attributes.width.value = parseInt(svg.width.baseVal.value) - (10 * 2);
+			}
+		}
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_parent(c[i]);
+		}
+	}
+	function zoom(node) {
+		var attr = find_child(node, "rect").attributes;
+		var width = parseFloat(attr.width.value);
+		var xmin = parseFloat(attr.x.value);
+		var xmax = parseFloat(xmin + width);
+		var ymin = parseFloat(attr.y.value);
+		var ratio = (svg.width.baseVal.value - 2 * 10) / width;
+
+		// XXX: Workaround for JavaScript float issues (fix me)
+		var fudge = 0.0001;
+
+		unzoombtn.classList.remove("hide");
+
+		var el = document.getElementById("frames").children;
+		for (var i = 0; i < el.length; i++) {
+			var e = el[i];
+			var a = find_child(e, "rect").attributes;
+			var ex = parseFloat(a.x.value);
+			var ew = parseFloat(a.width.value);
+			var upstack;
+			// Is it an ancestor
+			if (0 == 0) {
+				upstack = parseFloat(a.y.value) > ymin;
+			} else {
+				upstack = parseFloat(a.y.value) < ymin;
+			}
+			if (upstack) {
+				// Direct ancestor
+				if (ex <= xmin && (ex+ew+fudge) >= xmax) {
+					e.classList.add("parent");
+					zoom_parent(e);
+					update_text(e);
+				}
+				// not in current path
+				else
+					e.classList.add("hide");
+			}
+			// Children maybe
+			else {
+				// no common path
+				if (ex < xmin || ex + fudge >= xmax) {
+					e.classList.add("hide");
+				}
+				else {
+					zoom_child(e, xmin, ratio);
+					update_text(e);
+				}
+			}
+		}
+		search();
+	}
+	function unzoom(dont_update_text) {
+		unzoombtn.classList.add("hide");
+		var el = document.getElementById("frames").children;
+		for(var i = 0; i < el.length; i++) {
+			el[i].classList.remove("parent");
+			el[i].classList.remove("hide");
+			zoom_reset(el[i]);
+			if(!dont_update_text) update_text(el[i]);
+		}
+		search();
+	}
+	function clearzoom() {
+		unzoom();
+
+		// remove zoom state
+		var params = get_params();
+		if (params.x) delete params.x;
+		if (params.y) delete params.y;
+		history.replaceState(null, null, parse_params(params));
+	}
+
+	// search
+	function toggle_ignorecase() {
+		ignorecase = !ignorecase;
+		if (ignorecase) {
+			ignorecaseBtn.classList.add("show");
+		} else {
+			ignorecaseBtn.classList.remove("show");
+		}
+		reset_search();
+		search();
+	}
+	function reset_search() {
+		var el = document.querySelectorAll("#frames rect");
+		for (var i = 0; i < el.length; i++) {
+			orig_load(el[i], "fill")
+		}
+		var params = get_params();
+		delete params.s;
+		history.replaceState(null, null, parse_params(params));
+	}
+	function search_prompt() {
+		if (!searching) {
+			var term = prompt("Enter a search term (regexp " +
+			    "allowed, eg: ^ext4_)"
+			    + (ignorecase ? ", ignoring case" : "")
+			    + "\nPress Ctrl-i to toggle case sensitivity", "");
+			if (term != null) search(term);
+		} else {
+			reset_search();
+			searching = 0;
+			currentSearchTerm = null;
+			searchbtn.classList.remove("show");
+			searchbtn.firstChild.nodeValue = "Search"
+			matchedtxt.classList.add("hide");
+			matchedtxt.firstChild.nodeValue = ""
+		}
+	}
+	function search(term) {
+		if (term) currentSearchTerm = term;
+		if (currentSearchTerm === null) return;
+
+		var re = new RegExp(currentSearchTerm, ignorecase ? 'i' : '');
+		var el = document.getElementById("frames").children;
+		var matches = new Object();
+		var maxwidth = 0;
+		for (var i = 0; i < el.length; i++) {
+			var e = el[i];
+			var func = g_to_func(e);
+			var rect = find_child(e, "rect");
+			if (func == null || rect == null)
+				continue;
+
+			// Save max width. Only works as we have a root frame
+			var w = parseFloat(rect.attributes.width.value);
+			if (w > maxwidth)
+				maxwidth = w;
+
+			if (func.match(re)) {
+				// highlight
+				var x = parseFloat(rect.attributes.x.value);
+				orig_save(rect, "fill");
+				rect.attributes.fill.value = "rgb(230,0,230)";
+
+				// remember matches
+				if (matches[x] == undefined) {
+					matches[x] = w;
+				} else {
+					if (w > matches[x]) {
+						// overwrite with parent
+						matches[x] = w;
+					}
+				}
+				searching = 1;
+			}
+		}
+		if (!searching)
+			return;
+		var params = get_params();
+		params.s = currentSearchTerm;
+		history.replaceState(null, null, parse_params(params));
+
+		searchbtn.classList.add("show");
+		searchbtn.firstChild.nodeValue = "Reset Search";
+
+		// calculate percent matched, excluding vertical overlap
+		var count = 0;
+		var lastx = -1;
+		var lastw = 0;
+		var keys = Array();
+		for (k in matches) {
+			if (matches.hasOwnProperty(k))
+				keys.push(k);
+		}
+		// sort the matched frames by their x location
+		// ascending, then width descending
+		keys.sort(function(a, b){
+			return a - b;
+		});
+		// Step through frames saving only the biggest bottom-up frames
+		// thanks to the sort order. This relies on the tree property
+		// where children are always smaller than their parents.
+		var fudge = 0.0001;	// JavaScript floating point
+		for (var k in keys) {
+			var x = parseFloat(keys[k]);
+			var w = matches[keys[k]];
+			if (x >= lastx + lastw - fudge) {
+				count += w;
+				lastx = x;
+				lastw = w;
+			}
+		}
+		// display matched percent
+		matchedtxt.classList.remove("hide");
+		var pct = 100 * count / maxwidth;
+		if (pct != 100) pct = pct.toFixed(1)
+		matchedtxt.firstChild.nodeValue = "Matched: " + pct + "%";
+	}
+]]>
+</script>
+<rect x="0.0" y="0" width="1400.0" height="270.0" fill="url(#background)"  />
+<text id="title" x="700.00" y="24" >btree OPTIMIZED - bisect on keys list (python3-dbg, cycles) - Python functions only</text>
+<text id="subtitle" x="700.00" y="48" >Python frames only; click to zoom, click title to reset</text>
+<text id="details" x="10.00" y="253" > </text>
+<text id="unzoom" x="10.00" y="24" class="hide">Reset Zoom</text>
+<text id="search" x="1290.00" y="24" >Search</text>
+<text id="ignorecase" x="1374.00" y="24" >ic</text>
+<text id="matched" x="1290.00" y="253" > </text>
+<g id="frames">
+<g >
+<title>BNode.is_leaf (40,000,000 samples, 0.09%)</title><rect x="563.7" y="77" width="1.3" height="15.0" fill="rgb(250,207,49)" rx="2" ry="2" />
+<text  x="566.70" y="87.5" ></text>
+</g>
+<g >
+<title>BNode.delete (134,000,000 samples, 0.31%)</title><rect x="560.7" y="93" width="4.3" height="15.0" fill="rgb(220,70,16)" rx="2" ry="2" />
+<text  x="563.74" y="103.5" ></text>
+</g>
+<g >
+<title>BNode.search (3,358,000,000 samples, 7.68%)</title><rect x="326.5" y="141" width="106.0" height="15.0" fill="rgb(250,211,50)" rx="2" ry="2" />
+<text  x="329.47" y="151.5" >BNode.search</text>
+</g>
+<g >
+<title>BNode.is_full (592,000,000 samples, 1.35%)</title><rect x="1200.5" y="77" width="18.7" height="15.0" fill="rgb(225,95,22)" rx="2" ry="2" />
+<text  x="1203.55" y="87.5" ></text>
+</g>
+<g >
+<title>BNode.is_leaf (14,000,000 samples, 0.03%)</title><rect x="571.0" y="109" width="0.4" height="15.0" fill="rgb(250,207,49)" rx="2" ry="2" />
+<text  x="573.96" y="119.5" ></text>
+</g>
+<g >
+<title>BNode.__iter__ (486,000,000 samples, 1.11%)</title><rect x="443.6" y="141" width="15.3" height="15.0" fill="rgb(249,204,48)" rx="2" ry="2" />
+<text  x="446.57" y="151.5" ></text>
+</g>
+<g >
+<title>BNode.get_position_opt (94,000,000 samples, 0.22%)</title><rect x="560.7" y="77" width="3.0" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="563.74" y="87.5" ></text>
+</g>
+<g >
+<title>BNode.__iter__ (184,000,000 samples, 0.42%)</title><rect x="453.1" y="93" width="5.8" height="15.0" fill="rgb(249,204,48)" rx="2" ry="2" />
+<text  x="456.10" y="103.5" ></text>
+</g>
+<g >
+<title>BNode.__iter__ (404,000,000 samples, 0.92%)</title><rect x="446.2" y="125" width="12.7" height="15.0" fill="rgb(249,204,48)" rx="2" ry="2" />
+<text  x="449.16" y="135.5" ></text>
+</g>
+<g >
+<title>BTree.__delitem__ (2,292,000,000 samples, 5.24%)</title><rect x="502.6" y="157" width="72.3" height="15.0" fill="rgb(221,73,17)" rx="2" ry="2" />
+<text  x="505.60" y="167.5" >BTree.__..</text>
+</g>
+<g >
+<title>BNode.split_child (302,000,000 samples, 0.69%)</title><rect x="1297.2" y="93" width="9.5" height="15.0" fill="rgb(231,124,29)" rx="2" ry="2" />
+<text  x="1300.20" y="103.5" ></text>
+</g>
+<g >
+<title>BNode.search (204,000,000 samples, 0.47%)</title><rect x="462.6" y="125" width="6.5" height="15.0" fill="rgb(250,211,50)" rx="2" ry="2" />
+<text  x="465.63" y="135.5" ></text>
+</g>
+<g >
+<title>BNode.insert_item (22,840,000,000 samples, 52.24%)</title><rect x="611.6" y="125" width="720.9" height="15.0" fill="rgb(252,219,52)" rx="2" ry="2" />
+<text  x="614.56" y="135.5" >BNode.insert_item</text>
+</g>
+<g >
+<title>BNode.delete.&lt;locals&gt;.is_big (112,000,000 samples, 0.26%)</title><rect x="545.1" y="109" width="3.6" height="15.0" fill="rgb(254,229,54)" rx="2" ry="2" />
+<text  x="548.14" y="119.5" ></text>
+</g>
+<g >
+<title>Random.randbytes (638,000,000 samples, 1.46%)</title><rect x="107.0" y="173" width="20.2" height="15.0" fill="rgb(253,222,53)" rx="2" ry="2" />
+<text  x="110.03" y="183.5" ></text>
+</g>
+<g >
+<title>Random._randbelow_with_getrandbits (754,000,000 samples, 1.72%)</title><rect x="1366.2" y="141" width="23.8" height="15.0" fill="rgb(244,179,43)" rx="2" ry="2" />
+<text  x="1369.20" y="151.5" >R..</text>
+</g>
+<g >
+<title>BNode.get_position_opt (390,000,000 samples, 0.89%)</title><rect x="310.6" y="141" width="12.3" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="313.56" y="151.5" ></text>
+</g>
+<g >
+<title>BTree.__setitem__ (24,312,000,000 samples, 55.61%)</title><rect x="574.9" y="157" width="767.4" height="15.0" fill="rgb(222,80,19)" rx="2" ry="2" />
+<text  x="577.94" y="167.5" >BTree.__setitem__</text>
+</g>
+<g >
+<title>all (43,720,000,000 samples, 100%)</title><rect x="10.0" y="221" width="1380.0" height="15.0" fill="rgb(213,39,9)" rx="2" ry="2" />
+<text  x="13.00" y="231.5" ></text>
+</g>
+<g >
+<title>BNode.is_leaf (154,000,000 samples, 0.35%)</title><rect x="1292.3" y="93" width="4.9" height="15.0" fill="rgb(250,207,49)" rx="2" ry="2" />
+<text  x="1295.34" y="103.5" ></text>
+</g>
+<g >
+<title>run_once (38,018,000,000 samples, 86.96%)</title><rect x="190.0" y="189" width="1200.0" height="15.0" fill="rgb(227,103,24)" rx="2" ry="2" />
+<text  x="192.98" y="199.5" >run_once</text>
+</g>
+<g >
+<title>BNode.delete.&lt;locals&gt;.is_big (120,000,000 samples, 0.27%)</title><rect x="527.7" y="125" width="3.7" height="15.0" fill="rgb(254,229,54)" rx="2" ry="2" />
+<text  x="530.66" y="135.5" ></text>
+</g>
+<g >
+<title>BTree.get (322,000,000 samples, 0.74%)</title><rect x="458.9" y="173" width="10.2" height="15.0" fill="rgb(238,156,37)" rx="2" ry="2" />
+<text  x="461.91" y="183.5" ></text>
+</g>
+<g >
+<title>BNode.delete (622,000,000 samples, 1.42%)</title><rect x="548.7" y="109" width="19.6" height="15.0" fill="rgb(220,70,16)" rx="2" ry="2" />
+<text  x="551.68" y="119.5" ></text>
+</g>
+<g >
+<title>BNode.get_position_opt (26,000,000 samples, 0.06%)</title><rect x="468.3" y="77" width="0.8" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="471.25" y="87.5" ></text>
+</g>
+<g >
+<title>BTree.__getitem__ (306,000,000 samples, 0.70%)</title><rect x="459.4" y="157" width="9.7" height="15.0" fill="rgb(249,206,49)" rx="2" ry="2" />
+<text  x="462.42" y="167.5" ></text>
+</g>
+<g >
+<title>BNode.get_position_opt (350,000,000 samples, 0.80%)</title><rect x="351.8" y="125" width="11.0" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="354.78" y="135.5" ></text>
+</g>
+<g >
+<title>Random._randbelow_with_getrandbits (44,000,000 samples, 0.10%)</title><rect x="471.5" y="141" width="1.4" height="15.0" fill="rgb(244,179,43)" rx="2" ry="2" />
+<text  x="474.54" y="151.5" ></text>
+</g>
+<g >
+<title>BNode.get_position_opt (398,000,000 samples, 0.91%)</title><rect x="389.5" y="109" width="12.6" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="392.53" y="119.5" ></text>
+</g>
+<g >
+<title>BNode.search (834,000,000 samples, 1.91%)</title><rect x="406.1" y="109" width="26.4" height="15.0" fill="rgb(250,211,50)" rx="2" ry="2" />
+<text  x="409.13" y="119.5" >B..</text>
+</g>
+<g >
+<title>BNode.search (4,692,000,000 samples, 10.73%)</title><rect x="284.4" y="157" width="148.1" height="15.0" fill="rgb(250,211,50)" rx="2" ry="2" />
+<text  x="287.36" y="167.5" >BNode.search</text>
+</g>
+<g >
+<title>BNode.delete (380,000,000 samples, 0.87%)</title><rect x="515.7" y="125" width="12.0" height="15.0" fill="rgb(220,70,16)" rx="2" ry="2" />
+<text  x="518.66" y="135.5" ></text>
+</g>
+<g >
+<title>BNode.delete (254,000,000 samples, 0.58%)</title><rect x="548.7" y="93" width="8.0" height="15.0" fill="rgb(220,70,16)" rx="2" ry="2" />
+<text  x="551.68" y="103.5" ></text>
+</g>
+<g >
+<title>run_bench (43,720,000,000 samples, 100.00%)</title><rect x="10.0" y="205" width="1380.0" height="15.0" fill="rgb(239,159,38)" rx="2" ry="2" />
+<text  x="13.00" y="215.5" >run_bench</text>
+</g>
+<g >
+<title>BNode.is_leaf (380,000,000 samples, 0.87%)</title><rect x="1259.9" y="61" width="12.0" height="15.0" fill="rgb(250,207,49)" rx="2" ry="2" />
+<text  x="1262.89" y="71.5" ></text>
+</g>
+<g >
+<title>BNode.__init__ (476,000,000 samples, 1.09%)</title><rect x="1243.9" y="61" width="15.0" height="15.0" fill="rgb(249,204,48)" rx="2" ry="2" />
+<text  x="1246.92" y="71.5" ></text>
+</g>
+<g >
+<title>Random._randbelow_with_getrandbits (1,272,000,000 samples, 2.91%)</title><rect x="145.8" y="141" width="40.1" height="15.0" fill="rgb(244,179,43)" rx="2" ry="2" />
+<text  x="148.79" y="151.5" >Ran..</text>
+</g>
+<g >
+<title>BNode.get_position_opt (612,000,000 samples, 1.40%)</title><rect x="1105.9" y="77" width="19.3" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="1108.92" y="87.5" ></text>
+</g>
+<g >
+<title>BNode.search (2,094,000,000 samples, 4.79%)</title><rect x="366.4" y="125" width="66.1" height="15.0" fill="rgb(250,211,50)" rx="2" ry="2" />
+<text  x="369.36" y="135.5" >BNode.s..</text>
+</g>
+<g >
+<title>BNode.is_leaf (112,000,000 samples, 0.26%)</title><rect x="362.8" y="125" width="3.6" height="15.0" fill="rgb(250,207,49)" rx="2" ry="2" />
+<text  x="365.83" y="135.5" ></text>
+</g>
+<g >
+<title>Record.__init__ (128,000,000 samples, 0.29%)</title><rect x="185.9" y="173" width="4.1" height="15.0" fill="rgb(223,87,20)" rx="2" ry="2" />
+<text  x="188.94" y="183.5" ></text>
+</g>
+<g >
+<title>BNode.insert_item (2,386,000,000 samples, 5.46%)</title><rect x="1125.2" y="77" width="75.3" height="15.0" fill="rgb(252,219,52)" rx="2" ry="2" />
+<text  x="1128.24" y="87.5" >BNode.in..</text>
+</g>
+<g >
+<title>BTree.__iter__ (838,000,000 samples, 1.92%)</title><rect x="432.5" y="173" width="26.4" height="15.0" fill="rgb(234,137,32)" rx="2" ry="2" />
+<text  x="435.46" y="183.5" >B..</text>
+</g>
+<g >
+<title>BNode.split_child (1,472,000,000 samples, 3.37%)</title><rect x="1225.4" y="77" width="46.5" height="15.0" fill="rgb(231,124,29)" rx="2" ry="2" />
+<text  x="1228.42" y="87.5" >BNod..</text>
+</g>
+<g >
+<title>BNode.get_position_opt (466,000,000 samples, 1.07%)</title><rect x="983.4" y="109" width="14.8" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="986.45" y="119.5" ></text>
+</g>
+<g >
+<title>Random.shuffle (1,510,000,000 samples, 3.45%)</title><rect x="1342.3" y="157" width="47.7" height="15.0" fill="rgb(243,178,42)" rx="2" ry="2" />
+<text  x="1345.34" y="167.5" >Rand..</text>
+</g>
+<g >
+<title>BNode.get_position_opt (22,000,000 samples, 0.05%)</title><rect x="464.5" y="109" width="0.7" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="467.47" y="119.5" ></text>
+</g>
+<g >
+<title>BNode.is_leaf (158,000,000 samples, 0.36%)</title><rect x="1195.6" y="61" width="4.9" height="15.0" fill="rgb(250,207,49)" rx="2" ry="2" />
+<text  x="1198.56" y="71.5" ></text>
+</g>
+<g >
+<title>BNode.delete (1,266,000,000 samples, 2.90%)</title><rect x="531.4" y="125" width="40.0" height="15.0" fill="rgb(220,70,16)" rx="2" ry="2" />
+<text  x="534.45" y="135.5" >BNo..</text>
+</g>
+<g >
+<title>BNode.get_position_opt (98,000,000 samples, 0.22%)</title><rect x="571.4" y="125" width="3.1" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="574.41" y="135.5" ></text>
+</g>
+<g >
+<title>Random.randrange (92,000,000 samples, 0.21%)</title><rect x="470.0" y="157" width="2.9" height="15.0" fill="rgb(221,74,17)" rx="2" ry="2" />
+<text  x="473.02" y="167.5" ></text>
+</g>
+<g >
+<title>BNode.get_position_opt (376,000,000 samples, 0.86%)</title><rect x="420.6" y="93" width="11.9" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="423.59" y="103.5" ></text>
+</g>
+<g >
+<title>BNode.get_position_opt (30,000,000 samples, 0.07%)</title><rect x="461.3" y="125" width="1.0" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="464.31" y="135.5" ></text>
+</g>
+<g >
+<title>BNode.is_leaf (14,000,000 samples, 0.03%)</title><rect x="574.5" y="125" width="0.4" height="15.0" fill="rgb(250,207,49)" rx="2" ry="2" />
+<text  x="577.50" y="135.5" ></text>
+</g>
+<g >
+<title>BNode.is_leaf (128,000,000 samples, 0.29%)</title><rect x="402.1" y="109" width="4.0" height="15.0" fill="rgb(250,207,49)" rx="2" ry="2" />
+<text  x="405.09" y="119.5" ></text>
+</g>
+<g >
+<title>Random.choice (650,000,000 samples, 1.49%)</title><rect x="86.5" y="173" width="20.5" height="15.0" fill="rgb(233,131,31)" rx="2" ry="2" />
+<text  x="89.51" y="183.5" ></text>
+</g>
+<g >
+<title>BNode.is_leaf (12,000,000 samples, 0.03%)</title><rect x="462.3" y="125" width="0.3" height="15.0" fill="rgb(250,207,49)" rx="2" ry="2" />
+<text  x="465.26" y="135.5" ></text>
+</g>
+<g >
+<title>BTree.__getitem__ (5,070,000,000 samples, 11.60%)</title><rect x="272.4" y="173" width="160.1" height="15.0" fill="rgb(249,206,49)" rx="2" ry="2" />
+<text  x="275.43" y="183.5" >BTree.__getitem__</text>
+</g>
+<g >
+<title>BNode.search (278,000,000 samples, 0.64%)</title><rect x="460.3" y="141" width="8.8" height="15.0" fill="rgb(250,211,50)" rx="2" ry="2" />
+<text  x="463.30" y="151.5" ></text>
+</g>
+<g >
+<title>BNode.is_leaf (148,000,000 samples, 0.34%)</title><rect x="1327.8" y="109" width="4.6" height="15.0" fill="rgb(250,207,49)" rx="2" ry="2" />
+<text  x="1330.75" y="119.5" ></text>
+</g>
+<g >
+<title>BNode.delete.&lt;locals&gt;.is_big (128,000,000 samples, 0.29%)</title><rect x="556.7" y="93" width="4.0" height="15.0" fill="rgb(254,229,54)" rx="2" ry="2" />
+<text  x="559.70" y="103.5" ></text>
+</g>
+<g >
+<title>BTree.add (23,950,000,000 samples, 54.78%)</title><rect x="586.4" y="141" width="755.9" height="15.0" fill="rgb(237,149,35)" rx="2" ry="2" />
+<text  x="589.37" y="151.5" >BTree.add</text>
+</g>
+<g >
+<title>make_tree (29,054,000,000 samples, 66.45%)</title><rect x="472.9" y="173" width="917.1" height="15.0" fill="rgb(234,137,32)" rx="2" ry="2" />
+<text  x="475.92" y="183.5" >make_tree</text>
+</g>
+<g >
+<title>BNode.__init__ (148,000,000 samples, 0.34%)</title><rect x="1301.7" y="77" width="4.7" height="15.0" fill="rgb(249,204,48)" rx="2" ry="2" />
+<text  x="1304.75" y="87.5" ></text>
+</g>
+<g >
+<title>BNode.get_position_opt (72,000,000 samples, 0.16%)</title><rect x="565.0" y="93" width="2.2" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="567.97" y="103.5" ></text>
+</g>
+<g >
+<title>BNode.is_full (648,000,000 samples, 1.48%)</title><rect x="1271.9" y="93" width="20.4" height="15.0" fill="rgb(225,95,22)" rx="2" ry="2" />
+<text  x="1274.89" y="103.5" ></text>
+</g>
+<g >
+<title>make_records (5,342,000,000 samples, 12.22%)</title><rect x="21.4" y="189" width="168.6" height="15.0" fill="rgb(254,228,54)" rx="2" ry="2" />
+<text  x="24.36" y="199.5" >make_records</text>
+</g>
+<g >
+<title>BNode.is_leaf (34,000,000 samples, 0.08%)</title><rect x="567.2" y="93" width="1.1" height="15.0" fill="rgb(250,207,49)" rx="2" ry="2" />
+<text  x="570.24" y="103.5" ></text>
+</g>
+<g >
+<title>Random.randrange (1,674,000,000 samples, 3.83%)</title><rect x="133.1" y="157" width="52.8" height="15.0" fill="rgb(221,74,17)" rx="2" ry="2" />
+<text  x="136.10" y="167.5" >Rando..</text>
+</g>
+<g >
+<title>BNode.get_position_opt (656,000,000 samples, 1.50%)</title><rect x="1165.1" y="61" width="20.7" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="1168.13" y="71.5" ></text>
+</g>
+<g >
+<title>BNode.delete (2,210,000,000 samples, 5.05%)</title><rect x="505.2" y="141" width="69.7" height="15.0" fill="rgb(220,70,16)" rx="2" ry="2" />
+<text  x="508.18" y="151.5" >BNode.d..</text>
+</g>
+<g >
+<title>BNode.search (54,000,000 samples, 0.12%)</title><rect x="467.4" y="93" width="1.7" height="15.0" fill="rgb(250,211,50)" rx="2" ry="2" />
+<text  x="470.37" y="103.5" ></text>
+</g>
+<g >
+<title>Random.randint (122,000,000 samples, 0.28%)</title><rect x="469.1" y="173" width="3.8" height="15.0" fill="rgb(224,89,21)" rx="2" ry="2" />
+<text  x="472.07" y="183.5" ></text>
+</g>
+<g >
+<title>BTree.iterkeys (704,000,000 samples, 1.61%)</title><rect x="436.7" y="157" width="22.2" height="15.0" fill="rgb(221,75,18)" rx="2" ry="2" />
+<text  x="439.69" y="167.5" >B..</text>
+</g>
+<g >
+<title>Random._randbelow_with_getrandbits (344,000,000 samples, 0.79%)</title><rect x="96.2" y="157" width="10.8" height="15.0" fill="rgb(244,179,43)" rx="2" ry="2" />
+<text  x="99.17" y="167.5" ></text>
+</g>
+<g >
+<title>BNode.get_position_opt (588,000,000 samples, 1.34%)</title><rect x="1041.1" y="93" width="18.6" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="1044.15" y="103.5" ></text>
+</g>
+<g >
+<title>BNode.is_full (666,000,000 samples, 1.52%)</title><rect x="1306.7" y="109" width="21.1" height="15.0" fill="rgb(225,95,22)" rx="2" ry="2" />
+<text  x="1309.73" y="119.5" ></text>
+</g>
+<g >
+<title>Random.randint (1,862,000,000 samples, 4.26%)</title><rect x="127.2" y="173" width="58.7" height="15.0" fill="rgb(224,89,21)" rx="2" ry="2" />
+<text  x="130.17" y="183.5" >Random..</text>
+</g>
+<g >
+<title>BNode.is_full (30,000,000 samples, 0.07%)</title><rect x="1258.9" y="61" width="1.0" height="15.0" fill="rgb(225,95,22)" rx="2" ry="2" />
+<text  x="1261.94" y="71.5" ></text>
+</g>
+<g >
+<title>BNode.delete (434,000,000 samples, 0.99%)</title><rect x="531.4" y="109" width="13.7" height="15.0" fill="rgb(220,70,16)" rx="2" ry="2" />
+<text  x="534.45" y="119.5" ></text>
+</g>
+<g >
+<title>BNode.insert_item (6,722,000,000 samples, 15.38%)</title><rect x="1059.7" y="93" width="212.2" height="15.0" fill="rgb(252,219,52)" rx="2" ry="2" />
+<text  x="1062.71" y="103.5" >BNode.insert_item</text>
+</g>
+<g >
+<title>BNode.insert_item (9,776,000,000 samples, 22.36%)</title><rect x="998.2" y="109" width="308.5" height="15.0" fill="rgb(252,219,52)" rx="2" ry="2" />
+<text  x="1001.16" y="119.5" >BNode.insert_item</text>
+</g>
+<g >
+<title>BNode.is_full (308,000,000 samples, 0.70%)</title><rect x="1185.8" y="61" width="9.8" height="15.0" fill="rgb(225,95,22)" rx="2" ry="2" />
+<text  x="1188.84" y="71.5" ></text>
+</g>
+<g >
+<title>BNode.is_leaf (196,000,000 samples, 0.45%)</title><rect x="1219.2" y="77" width="6.2" height="15.0" fill="rgb(250,207,49)" rx="2" ry="2" />
+<text  x="1222.24" y="87.5" ></text>
+</g>
+<g >
+<title>BNode.__iter__ (298,000,000 samples, 0.68%)</title><rect x="449.5" y="109" width="9.4" height="15.0" fill="rgb(249,204,48)" rx="2" ry="2" />
+<text  x="452.50" y="119.5" ></text>
+</g>
+<g >
+<title>BNode.search (116,000,000 samples, 0.27%)</title><rect x="465.4" y="109" width="3.7" height="15.0" fill="rgb(250,211,50)" rx="2" ry="2" />
+<text  x="468.41" y="119.5" ></text>
+</g>
+<g >
+<title>BNode.get_position_opt (84,000,000 samples, 0.19%)</title><rect x="568.3" y="109" width="2.7" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="571.31" y="119.5" ></text>
+</g>
+<g >
+<title>BNode.is_leaf (114,000,000 samples, 0.26%)</title><rect x="322.9" y="141" width="3.6" height="15.0" fill="rgb(250,207,49)" rx="2" ry="2" />
+<text  x="325.87" y="151.5" ></text>
+</g>
+<g >
+<title>BNode.is_full (312,000,000 samples, 0.71%)</title><rect x="1332.5" y="125" width="9.8" height="15.0" fill="rgb(225,95,22)" rx="2" ry="2" />
+<text  x="1335.49" y="135.5" ></text>
+</g>
+<g >
+<title>BNode.get_position_opt (18,000,000 samples, 0.04%)</title><rect x="466.6" y="93" width="0.6" height="15.0" fill="rgb(219,65,15)" rx="2" ry="2" />
+<text  x="469.61" y="103.5" ></text>
+</g>
+</g>
+</svg>

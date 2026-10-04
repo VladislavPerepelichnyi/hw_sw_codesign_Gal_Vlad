@@ -1,0 +1,51 @@
+file: results/flamegraphs/optimized_debug.folded   total samples: 44322000000
+
+python function (inclusive)               samples      %
+<module>                                 44190000000   99.7
+main                                     43752000000   98.7
+run_bench                                43720000000   98.6
+run_once                                 38018000000   85.8
+make_tree                                29054000000   65.6
+BTree.__setitem__                        24312000000   54.9
+BTree.add                                23950000000   54.0
+BNode.insert_item                        22840000000   51.5
+BTree.__getitem__                        5376000000   12.1
+make_records                             5342000000   12.1
+BNode.search                             4970000000   11.2
+BNode.get_position_opt                   4280000000    9.7
+BNode.is_full                            2564000000    5.8
+Random._randbelow_with_getrandbits       2416000000    5.5
+BTree.__delitem__                        2292000000    5.2
+BNode.delete                             2210000000    5.0
+Random.randint                           1984000000    4.5
+BNode.split_child                        1776000000    4.0
+Random.randrange                         1766000000    4.0
+BNode.is_leaf                            1522000000    3.4
+Random.shuffle                           1510000000    3.4
+BTree.__iter__                           838000000    1.9
+BTree.iterkeys                           704000000    1.6
+Random.choice                            650000000    1.5
+Random.randbytes                         638000000    1.4
+
+CPython subsystem (inclusive, any frame)  samples      %
+GC (gc_collect_main & visitors)          14458000000   32.6
+allocator (PyObject_Malloc/Free, _PyMem_) 2574000000    5.8
+list.insert / ins1 / memmove             260000000    0.6
+list iteration (listiter_next/enum_next) 108000000    0.2
+
+leaf symbol (self)                        samples      %
+_PyEval_EvalFrameDefault                 12128000000   27.4
+validate_list.lto_priv.0                 9880000000   22.3
+_Py_DECREF_DecRefTotal                   1438000000    3.2
+_PyObject_IsFreed                        1110000000    2.5
+_Py_INCREF_IncRefTotal                   992000000    2.2
+visit_reachable                          862000000    1.9
+list_item.lto_priv.0                     854000000    1.9
+_PyEval_Vector                           720000000    1.6
+initialize_locals                        628000000    1.4
+py_trampoline_evaluator                  598000000    1.3
+_PyFrame_ClearExceptCode                 546000000    1.2
+gc_list_size.lto_priv.0                  456000000    1.0
+unicodekeys_lookup_unicode               452000000    1.0
+_PyEvalFramePushAndInit.lto_priv.0       448000000    1.0
+_PyMem_DebugCheckAddress                 428000000    1.0

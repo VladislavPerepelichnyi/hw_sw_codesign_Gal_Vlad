@@ -1,0 +1,20 @@
+baseline and optimized run back to back, Sat Oct  3 20:58:16 UTC 2026, 10 processes x 3 values each, CPython 3.12.15
+
++-----------+-----------------+------------------------+
+| Benchmark | timing_baseline | timing_optimized       |
++===========+=================+========================+
+| btree     | 3.22 sec        | 2.02 sec: 1.59x faster |
++-----------+-----------------+------------------------+
+
+--- baseline ---
+Minimum:         3.16 sec
+Median +- MAD:   3.18 sec +- 0.01 sec
+Mean +- std dev: 3.22 sec +- 0.12 sec
+Maximum:         3.83 sec
+Number of outlier (out of 3.13 sec..3.24 sec): 4
+--- optimized ---
+Minimum:         2.01 sec
+Median +- MAD:   2.02 sec +- 0.01 sec
+Mean +- std dev: 2.02 sec +- 0.01 sec
+Maximum:         2.06 sec
+Number of outlier (out of 2.00 sec..2.04 sec): 1

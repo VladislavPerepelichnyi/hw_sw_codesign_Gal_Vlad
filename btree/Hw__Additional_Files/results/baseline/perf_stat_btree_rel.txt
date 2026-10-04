@@ -1,0 +1,20 @@
+# started on Sat Oct  3 20:28:06 2026
+
+
+ Performance counter stats for '../.venv/bin/python scripts/profile_btree.py --loops 1 --bench benchmark/original/bm_btree/run_benchmark.py':
+
+                 0      cycles:u                                                    
+       20401154720      instructions:u                                              
+        5925753016      L1-dcache-loads                                             
+         150644844      L1-dcache-load-misses     #    2.54% of all L1-dcache accesses
+   <not supported>      LLC-loads                                                   
+   <not supported>      LLC-load-misses                                             
+                 0      branch-instructions:u                                       
+                 0      branch-misses:u           #    0.00% of all branches        
+
+       3.998862254 seconds time elapsed
+
+       3.796109000 seconds user
+       0.082699000 seconds sys
+
+

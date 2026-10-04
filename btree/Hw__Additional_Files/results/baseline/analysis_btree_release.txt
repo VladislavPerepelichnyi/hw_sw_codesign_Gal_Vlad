@@ -1,0 +1,96 @@
+==============================================================================
+btree benchmark research report
+==============================================================================
+benchmark : benchmark/original/bm_btree/run_benchmark.py
+python    : ../.venv/bin/python 3.12.15
+NUM_NODES=200000  RECREATE_FRACTION=0.2  min_degree=16  gc.threshold=(700, 10, 10)
+
+1. Reference: benchmark's own run_once(gc_only=False)
+   values: ['3.076', '3.045', '3.065']  median 3.065 s
+   gc_only variant (only gc.collect timed): median 0.119 s
+
+2. Per-phase timing (same ops as run_once, median of 3)
+phase                              median s      min s  % total
+1 build (insert 200k)                1.5185     1.4835     47.8
+2 delete 40k                         0.1489     0.1476      4.7
+3 re-insert 40k                      0.2592     0.2569      8.2
+4 gc.collect()                       0.2103     0.1212      6.6
+5 iterate all + lookup each          0.8730     0.8686     27.5
+6 random lookups 10k                 0.0656     0.0653      2.1
+TOTAL (run_once)                     3.1798     3.0637    100.0
+
+   Automatic GC triggered inside make_tree (last run):
+     gen0:   341 collections,   0.0487 s
+     gen1:    30 collections,   0.0561 s
+     gen2:     1 collections,   0.1973 s
+     automatic GC total inside make_tree : 0.3022 s (9.5% of run_once)
+     explicit gc.collect()               : 0.2325 s
+     tracked objects after build         : 440941
+
+3. Tree shape after make_tree
+   nodes                       : 10150
+   leaves                      : 9612
+   internal                    : 538
+   items                       : 200000
+   height (levels below root)  : 3
+   min_degree t                : 16
+   max items/node              : 31
+   mean fill                   : 19.70
+   median fill                 : 18.00
+   min fill                    : 15
+   max fill                    : 31
+   nodes per depth             : {0: 1, 1: 26, 2: 511, 3: 9612}
+   max key                     : 199999
+   key bits needed             : 18
+
+4. In-node linear key search (BNode.get_position) work per phase
+   phase                                 calls     compares  cmp/call
+   1 build (insert 200k)                784998      7930463     10.10
+   2 delete 40k                         160000       160000      1.00
+   3 re-insert 40k                      160000      2540283     15.88
+   5 iterate all + lookup each          789854      9367988     11.86
+   6 random lookups 10k                  39852       473218     11.87
+   TOTAL                               1934704     20471952     10.58
+   items scanned per call (histogram, top 12 buckets):
+       0 items :         1  (  0.0%, cum   0.0%)
+       1 items :    268417  ( 13.9%, cum  13.9%)
+       2 items :     88200  (  4.6%, cum  18.4%)
+       3 items :     94773  (  4.9%, cum  23.3%)
+       4 items :     80815  (  4.2%, cum  27.5%)
+       5 items :     82067  (  4.2%, cum  31.8%)
+       6 items :     82026  (  4.2%, cum  36.0%)
+       7 items :     83802  (  4.3%, cum  40.3%)
+       8 items :     78911  (  4.1%, cum  44.4%)
+       9 items :     81494  (  4.2%, cum  48.6%)
+      10 items :     75612  (  3.9%, cum  52.5%)
+      11 items :     81417  (  4.2%, cum  56.7%)
+     ... up to 31 items
+
+5. cProfile of one run_once (tottime ranking; absolute times inflated by profiler)
+         15174104 function calls (13129397 primitive calls) in 8.365 seconds
+
+   Ordered by: internal time
+   List reduced from 38 to 18 due to restriction <18>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  1934704    2.333    0.000    2.344    0.000 ./benchmark/original/bm_btree/run_benchmark.py:58(get_position)
+944998/240000    1.728    0.000    4.271    0.000 ./benchmark/original/bm_btree/run_benchmark.py:76(insert_item)
+829706/210000    0.894    0.000    1.959    0.000 ./benchmark/original/bm_btree/run_benchmark.py:64(search)
+  1914056    0.604    0.000    0.840    0.000 ./benchmark/original/bm_btree/run_benchmark.py:55(is_full)
+  4334938    0.554    0.000    0.554    0.000 {built-in method builtins.len}
+160000/40000    0.349    0.000    0.601    0.000 ./benchmark/original/bm_btree/run_benchmark.py:154(delete)
+  1772539    0.267    0.000    0.267    0.000 ./benchmark/original/bm_btree/run_benchmark.py:43(is_leaf)
+800004/200001    0.211    0.000    0.213    0.000 ./benchmark/original/bm_btree/run_benchmark.py:46(__iter__)
+   240000    0.187    0.000    4.566    0.000 ./benchmark/original/bm_btree/run_benchmark.py:290(add)
+   209999    0.131    0.000    0.211    0.000 /usr/lib/python3.12/random.py:242(_randbelow_with_getrandbits)
+        1    0.130    0.130    5.707    5.707 ./benchmark/original/bm_btree/run_benchmark.py:330(make_tree)
+        1    0.119    0.119    8.365    8.365 ./benchmark/original/bm_btree/run_benchmark.py:353(run_once)
+        1    0.117    0.117    0.117    0.117 {built-in method gc.collect}
+   240000    0.111    0.000    4.676    0.000 ./benchmark/original/bm_btree/run_benchmark.py:271(__setitem__)
+   210000    0.093    0.000    2.052    0.000 ./benchmark/original/bm_btree/run_benchmark.py:274(__getitem__)
+        1    0.081    0.081    0.280    0.280 /usr/lib/python3.12/random.py:350(shuffle)
+   267250    0.081    0.000    0.112    0.000 ./benchmark/original/bm_btree/run_benchmark.py:161(is_big)
+   264060    0.072    0.000    0.072    0.000 {method 'insert' of 'list' objects}
+
+
+

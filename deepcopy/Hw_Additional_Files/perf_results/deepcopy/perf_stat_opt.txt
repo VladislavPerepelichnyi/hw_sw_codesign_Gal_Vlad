@@ -1,0 +1,24 @@
+# started on Wed Sep 16 13:24:36 2026
+
+
+ Performance counter stats for 'python3-dbg optimized_deepcopy.py' (3 runs):
+
+          65208.07 msec cpu-clock                 #    0.986 CPUs utilized            ( +-  0.17% )
+          65209.01 msec task-clock                #    0.986 CPUs utilized            ( +-  0.17% )
+      149469005764      cycles                    #    2.287 GHz                      ( +-  0.16% )  (75.12%)
+      316483878518      instructions              #    2.12  insn per cycle           ( +-  0.02% )  (87.52%)
+       69369992601      branch-instructions       #    1.061 G/sec                    ( +-  0.01% )  (87.52%)
+         319712723      branch-misses             #    0.46% of all branches          ( +-  0.15% )  (87.57%)
+        5384648264      bus-cycles                #   82.395 M/sec                    ( +-  0.17% )  (87.61%)
+         469483675      cache-references          #    7.184 M/sec                    ( +-  0.33% )  (87.61%)
+           7256464      cache-misses              #    1.556 % of all cache refs      ( +- 12.88% )  (50.14%)
+      149067984194      ref-cycles                #    2.281 G/sec                    ( +-  0.18% )  (62.78%)
+            266914      page-faults               #    4.084 K/sec                    ( +-  0.00% )
+            266914      minor-faults              #    4.084 K/sec                    ( +-  0.00% )
+                 0      major-faults              #    0.000 /sec                   
+              6666      context-switches          #  102.002 /sec                     ( +-  0.39% )
+   <not supported>      LLC-loads                                                   
+   <not supported>      LLC-stores                                                  
+
+            66.130 +- 0.310 seconds time elapsed  ( +-  0.47% )
+

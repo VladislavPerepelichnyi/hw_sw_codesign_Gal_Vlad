@@ -1,0 +1,8 @@
+tb_nsu: 3210 vectors
+NSU (streaming early-out, 32-bit keys, 2-line block; issue -> rd_valid, mem latency 3): 3210 vectors, 0 errors; cycles min 7 avg 7.7 max 9; busy avg 9.3 cycles; lines requested avg 2.00
+latency histogram:  7 cyc: 1707  8 cyc: 824  9 cyc: 679
+PASS: all 3210 vectors correct
+- hw/tb/tb_nsu.sv:104: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.052 2026-09-05
+- Verilator: $finish at 331us; walltime 0.168 s; speed 1.973 ms/s
+- Verilator: cpu 0.167 s on 1 threads; allocated 5 MB

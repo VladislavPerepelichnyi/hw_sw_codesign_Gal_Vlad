@@ -1,0 +1,9 @@
+perf_event__synthesize_bpf_events: failed to synthesize bpf images: No such file or directory
+Couldn't synthesize bpf events.
+benchmark module : benchmark/original/bm_btree/run_benchmark.py
+python           : ../.venv/bin/python 3.12.15
+perf trampoline  : True
+loops            : 2
+timed section    : 7.495 s over 2 loops (3.747 s/loop); wall 8.253 s
+[ perf record: Woken up 4 times to write data ]
+[ perf record: Captured and wrote 0.991 MB results/flamegraphs/baseline_release.perf.data (9523 samples) ]

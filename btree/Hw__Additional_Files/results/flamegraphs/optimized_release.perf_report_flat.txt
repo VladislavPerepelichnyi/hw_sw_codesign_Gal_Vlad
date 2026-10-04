@@ -1,0 +1,279 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 7K of event 'cycles:u'
+# Event count (approx.): 14050000000
+#
+# Overhead  Symbol                                                                                                                           IPC   [IPC Coverage]
+# ........  ...............................................................................................................................  ....................
+#
+    42.41%  [.] _PyEval_EvalFrameDefault                                                                                                     -      -            
+            |          
+            |--5.62%--0x7ffd85aaf5e0
+            |          0xa23c20
+            |          
+            |--5.25%--0x7ffd85aaf7f0
+            |          0xa23c20
+            |          
+            |--5.21%--0x7ffd85aaf3d0
+            |          0xa23c20
+            |          
+            |--4.00%--0x7ffd85aafa00
+            |          0xa23c20
+            |          
+            |--2.38%--0x7ffd85ab00b0
+            |          0xa23c20
+            |          
+            |--1.68%--0x7ffd85aaf1c0
+            |          0xa23c20
+            |          
+            |--1.67%--0x7ffd85aafe30
+            |          0xa23c20
+            |          
+            |--1.67%--0x7ffd85aafa10
+            |          0xa23c20
+            |          
+            |--1.62%--0x7ffd85aafc20
+            |          0xa23c20
+            |          
+            |--1.54%--0x7ffd85aaf800
+            |          0xa23c20
+            |          
+            |--1.28%--0x7ffd85aafea0
+            |          0xa23c20
+            |          
+            |--1.17%--0x7ffd85aafc10
+            |          0xa23c20
+            |          
+            |--0.98%--0x7ffd85ab0200
+            |          0xa23c20
+            |          
+            |--0.97%--0x7ffd85ab02c0
+            |          0xa23c20
+            |          
+            |--0.95%--0x7ffd85aafde0
+            |          0xa23c20
+            |          
+            |--0.88%--0x7ffd85aafc90
+            |          0xa23c20
+            |          
+            |--0.75%--0x7ffd85ab0040
+            |          0xa23c20
+            |          
+            |--0.70%--0x7ffd85aafff0
+            |          0xa23c20
+            |          
+             --0.51%--0x7ffd85aaf5f0
+                       0xa23c20
+
+     5.00%  [.] gc_collect_main.lto_priv.0                                                                                                   -      -            
+     4.67%  [.] visit_reachable.lto_priv.0                                                                                                   -      -            
+            |          
+             --1.37%--0xa23360
+
+     3.67%  [.] _PyFunction_Vectorcall                                                                                                       -      -            
+            |          
+             --1.22%--0xa1a360
+
+     3.39%  [.] list_item.lto_priv.0                                                                                                         -      -            
+     3.17%  [.] deduce_unreachable                                                                                                           -      -            
+            |          
+             --0.94%--0x7fcfe5fb7488
+                       0xa23c20
+
+     3.00%  [.] _PyEvalFrameClearAndPop.lto_priv.0                                                                                           -      -            
+     2.55%  [.] internal_bisect_left.lto_priv.0                                                                                              -      -            
+     2.38%  [.] py_trampoline_evaluator.lto_priv.0                                                                                           -      -            
+     2.09%  [.] list_traverse.lto_priv.0                                                                                                     -      -            
+            |          
+             --1.07%--0xa23360
+
+     1.99%  [.] initialize_locals.lto_priv.0                                                                                                 -      -            
+            |          
+             --0.70%--0
+
+     1.85%  [.] long_richcompare.lto_priv.0                                                                                                  -      -            
+     1.79%  [.] tupletraverse.lto_priv.0                                                                                                     -      -            
+            |          
+             --1.68%--0xa23360
+
+     1.67%  [.] subtype_traverse.lto_priv.0                                                                                                  -      -            
+     1.55%  [.] PyObject_Vectorcall                                                                                                          -      -            
+            |          
+             --1.10%--0xa1a360
+
+     1.21%  [.] _PyObject_GenericGetAttrWithDict                                                                                             -      -            
+            |
+            ---0xa23500
+
+     0.90%  [.] _Py_dict_lookup                                                                                                              -      -            
+     0.68%  [.] listiter_next.lto_priv.0                                                                                                     -      -            
+            |          
+             --0.65%--0x7ffd85aaf660
+                       0xa23c20
+
+     0.65%  [.] __memset_avx2_unaligned_erms                                                                                                 -      -            
+     0.61%  [.] PyUnstable_Code_GetExtra                                                                                                     -      -            
+     0.53%  [.] ins1.lto_priv.0                                                                                                              -      -            
+     0.53%  [.] long_dealloc.lto_priv.0                                                                                                      -      -            
+     0.53%  [.] tupledealloc.lto_priv.0                                                                                                      -      -            
+            |          
+             --0.51%--0xa23360
+
+     0.51%  [.] _PyObject_GetMethod                                                                                                          -      -            
+     0.48%  [.] _PyLong_FromByteArray                                                                                                        -      -            
+     0.47%  [.] _PyLong_AsByteArray                                                                                                          -      -            
+     0.47%  [.] list_dealloc.lto_priv.0                                                                                                      -      -            
+     0.46%  [.] vectorcall_method.lto_priv.0                                                                                                 -      -            
+     0.43%  [.] PyObject_GC_Del                                                                                                              -      -            
+     0.38%  [.] _PyFunction_Vectorcall.cold                                                                                                  -      -            
+     0.37%  [.] method_get.lto_priv.0                                                                                                        -      -            
+     0.36%  [.] list_slice.lto_priv.0                                                                                                        -      -            
+     0.33%  [.] _PyLong_Subtract                                                                                                             -      -            
+     0.31%  [.] PyFunction_NewWithQualName                                                                                                   -      -            
+     0.31%  [.] long_to_decimal_string_internal.lto_priv.0                                                                                   -      -            
+     0.30%  [.] _random_Random_getrandbits.lto_priv.0                                                                                        -      -            
+     0.28%  [.] subtype_dealloc.lto_priv.0                                                                                                   -      -            
+     0.27%  [.] _PyObject_GC_NewVar                                                                                                          -      -            
+     0.27%  [.] _bisect_bisect_left.lto_priv.0                                                                                               -      -            
+     0.26%  [.] genrand_uint32.lto_priv.0                                                                                                    -      -            
+     0.21%  [.] gen_iternext.lto_priv.0                                                                                                      -      -            
+     0.20%  [.] _PyUnicode_JoinArray                                                                                                         -      -            
+     0.20%  [.] intern_common.part.0.lto_priv.0                                                                                              -      -            
+     0.19%  [.] PyLong_FromLong                                                                                                              -      -            
+     0.19%  [.] PyObject_GetAttr                                                                                                             -      -            
+     0.19%  [.] _Py_EnterRecursiveCall.lto_priv.4.lto_priv.0                                                                                 -      -            
+     0.19%  [.] dict_traverse.lto_priv.0                                                                                                     -      -            
+     0.19%  [.] meth_dealloc.lto_priv.0                                                                                                      -      -            
+     0.17%  [.] PyObject_Malloc                                                                                                              -      -            
+     0.16%  [.] list_insert.lto_priv.0                                                                                                       -      -            
+     0.14%  [.] PySequence_Size                                                                                                              -      -            
+     0.14%  [.] slot_mp_ass_subscript.lto_priv.0                                                                                             -      -            
+     0.13%  [.] _PyObject_FastCallDictTstate                                                                                                 -      -            
+     0.13%  [.] __memmove_avx_unaligned_erms                                                                                                 -      -            
+     0.13%  [.] list_length.lto_priv.0                                                                                                       -      -            
+     0.13%  [.] list_resize.lto_priv.0                                                                                                       -      -            
+     0.11%  [.] vectorcall_method.lto_priv.0.cold                                                                                            -      -            
+     0.11%  [k] 0xffffffffbea00be0                                                                                                           -      -            
+     0.10%  [.] PyLong_FromSsize_t                                                                                                           -      -            
+     0.10%  [.] Py_LeaveRecursiveCall                                                                                                        -      -            
+     0.10%  [.] _PyLong_New                                                                                                                  -      -            
+     0.10%  [.] get_sq_item.isra.0                                                                                                           -      -            
+     0.10%  [.] object_new.lto_priv.0                                                                                                        -      -            
+     0.09%  [.] PyLong_AsSsize_t                                                                                                             -      -            
+     0.09%  [.] _PyObject_MakeTpCall                                                                                                         -      -            
+     0.09%  [.] _PyTuple_FromArraySteal                                                                                                      -      -            
+     0.09%  [.] int_bit_length_impl.lto_priv.0                                                                                               -      -            
+     0.09%  [.] rangeiter_next.lto_priv.0                                                                                                    -      -            
+     0.09%  [.] slot_tp_init.lto_priv.0                                                                                                      -      -            
+     0.09%  [.] 0x0000000000022174                                                                                                           -      -            
+     0.07%  [.] PyMem_Malloc                                                                                                                 -      -            
+     0.07%  [.] PyObject_IsTrue                                                                                                              -      -            
+     0.07%  [.] py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py             -      -            
+     0.06%  [.] PyList_New                                                                                                                   -      -            
+     0.06%  [.] PyMem_Free                                                                                                                   -      -            
+     0.06%  [.] PyObject_Str                                                                                                                 -      -            
+     0.06%  [.] PyType_IsSubtype                                                                                                             -      -            
+     0.06%  [.] PyUnicode_New                                                                                                                -      -            
+     0.06%  [.] list_extend.lto_priv.0                                                                                                       -      -            
+     0.06%  [.] py::BNode.get_position_opt:./benchmark/optimized/bm_btree/run_benchmark.py        -      -            
+     0.06%  [.] py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py             -      -            
+     0.06%  [.] py::BNode.is_full:./benchmark/optimized/bm_btree/run_benchmark.py                 -      -            
+     0.06%  [.] slot_mp_subscript.lto_priv.0                                                                                                 -      -            
+     0.06%  [.] unicode_dealloc.lto_priv.0                                                                                                   -      -            
+     0.06%  [.] update_one_slot.lto_priv.0                                                                                                   -      -            
+     0.04%  [.] PyFloat_FromDouble                                                                                                           -      -            
+     0.04%  [.] PyNumber_AsSsize_t                                                                                                           -      -            
+     0.04%  [.] _PyNumber_Index                                                                                                              -      -            
+     0.04%  [.] _PyObject_GC_New                                                                                                             -      -            
+     0.04%  [.] clear_slots.lto_priv.0                                                                                                       -      -            
+     0.04%  [.] func_dealloc.lto_priv.0                                                                                                      -      -            
+     0.04%  [.] func_traverse.lto_priv.0                                                                                                     -      -            
+     0.04%  [.] insertdict.lto_priv.0                                                                                                        -      -            
+     0.04%  [.] list_ass_slice.lto_priv.0                                                                                                    -      -            
+     0.04%  [.] long_mod.lto_priv.0                                                                                                          -      -            
+     0.04%  [.] method_vectorcall_O.lto_priv.0                                                                                               -      -            
+     0.04%  [.] py::BNode.is_leaf:./benchmark/optimized/bm_btree/run_benchmark.py                 -      -            
+     0.04%  [.] py::BTree.__iter__:./benchmark/optimized/bm_btree/run_benchmark.py                -      -            
+     0.04%  [.] r_object                                                                                                                     -      -            
+     0.04%  [.] type_traverse.lto_priv.0                                                                                                     -      -            
+     0.04%  [.] 0x0000000000022170                                                                                                           -      -            
+     0.03%  [.] PyDict_SetDefault                                                                                                            -      -            
+     0.03%  [.] PyDict_SetItem                                                                                                               -      -            
+     0.03%  [.] PyObject_Format                                                                                                              -      -            
+     0.03%  [.] PyObject_GetItem                                                                                                             -      -            
+     0.03%  [.] PyTuple_New                                                                                                                  -      -            
+     0.03%  [.] Py_XDECREF.lto_priv.21.lto_priv.0                                                                                            -      -            
+     0.03%  [.] _PyBuildSlice_Consume2.lto_priv.0                                                                                            -      -            
+     0.03%  [.] _PyCode_Quicken                                                                                                              -      -            
+     0.03%  [.] _PyGen_FetchStopIterationValue                                                                                               -      -            
+     0.03%  [.] _PyObject_Free                                                                                                               -      -            
+     0.03%  [.] __GI___pthread_self                                                                                                          -      -            
+     0.03%  [.] _random_Random_random.lto_priv.0                                                                                             -      -            
+     0.03%  [.] allocate_from_new_pool.lto_priv.0                                                                                            -      -            
+     0.03%  [.] gen_iternext.lto_priv.0.cold                                                                                                 -      -            
+     0.03%  [.] insert_to_emptydict.lto_priv.0                                                                                               -      -            
+     0.03%  [.] int_to_bytes.lto_priv.0                                                                                                      -      -            
+     0.03%  [.] py::BNode.search:./benchmark/optimized/bm_btree/run_benchmark.py                  -      -            
+     0.03%  [.] py::BTree.iterkeys:./benchmark/optimized/bm_btree/run_benchmark.py                -      -            
+     0.03%  [.] siphash13.lto_priv.0                                                                                                         -      -            
+     0.03%  [.] specialize_py_call.lto_priv.0                                                                                                -      -            
+     0.03%  [.] sys_intern.lto_priv.0                                                                                                        -      -            
+     0.03%  [.] 0x0000000000000ad3                                                                                                           -      -            
+     0.03%  [.] 0x0000000000023df0                                                                                                           -      -            
+     0.01%  [.] PyBytes_FromStringAndSize                                                                                                    -      -            
+     0.01%  [.] PyDict_DelItem                                                                                                               -      -            
+     0.01%  [.] PyDict_Next                                                                                                                  -      -            
+     0.01%  [.] PyNumber_Add                                                                                                                 -      -            
+     0.01%  [.] PyNumber_Remainder                                                                                                           -      -            
+     0.01%  [.] PyObject_SetItem                                                                                                             -      -            
+     0.01%  [.] PySlice_Unpack                                                                                                               -      -            
+     0.01%  [.] PyType_GenericAlloc                                                                                                          -      -            
+     0.01%  [.] PyUnicode_Concat                                                                                                             -      -            
+     0.01%  [.] _IO_file_sync@@GLIBC_2.2.5                                                                                                   -      -            
+     0.01%  [.] _PyErr_SetObject                                                                                                             -      -            
+     0.01%  [.] _PyFrame_ClearExceptCode                                                                                                     -      -            
+     0.01%  [.] _PyLong_FromMedium.lto_priv.0                                                                                                -      -            
+     0.01%  [.] _PyObject_GenericSetAttrWithDict                                                                                             -      -            
+     0.01%  [.] _PyObject_VectorcallTstate.lto_priv.10.lto_priv.0                                                                            -      -            
+     0.01%  [.] _PyStack_UnpackDict                                                                                                          -      -            
+     0.01%  [.] _PyTime_FromMicrosecondsClamp                                                                                                -      -            
+     0.01%  [.] _PyUnicode_FromASCII                                                                                                         -      -            
+     0.01%  [.] _PyUnicode_FromUCS1.lto_priv.0                                                                                               -      -            
+     0.01%  [.] _Py_type_getattro                                                                                                            -      -            
+     0.01%  [.] __memcmp_avx2_movbe                                                                                                          -      -            
+     0.01%  [.] __sbrk                                                                                                                       -      -            
+     0.01%  [.] __stpcpy_avx2                                                                                                                -      -            
+     0.01%  [.] _copy_characters.lto_priv.0                                                                                                  -      -            
+     0.01%  [.] _int_free                                                                                                                    -      -            
+     0.01%  [.] _int_malloc                                                                                                                  -      -            
+     0.01%  [.] dict_dealloc.lto_priv.0                                                                                                      -      -            
+     0.01%  [.] enum_next.lto_priv.0                                                                                                         -      -            
+     0.01%  [.] finalize_modules.lto_priv.0                                                                                                  -      -            
+     0.01%  [.] float_dealloc.lto_priv.0                                                                                                     -      -            
+     0.01%  [.] getset_get.lto_priv.0                                                                                                        -      -            
+     0.01%  [.] intern_static.constprop.0                                                                                                    -      -            
+     0.01%  [.] interpreter_clear.lto_priv.0                                                                                                 -      -            
+     0.01%  [.] list_subscript.lto_priv.0                                                                                                    -      -            
+     0.01%  [.] lookup_maybe_method.lto_priv.0                                                                                               -      -            
+     0.01%  [.] malloc                                                                                                                       -      -            
+     0.01%  [.] method_vectorcall_VARARGS.lto_priv.0                                                                                         -      -            
+     0.01%  [.] pthread_cond_signal@@GLIBC_2.3.2                                                                                             -      -            
+     0.01%  [.] py::BNode.__iter__:./benchmark/optimized/bm_btree/run_benchmark.py                -      -            
+     0.01%  [.] py::BNode.delete.<locals>.is_big:./benchmark/optimized/bm_btree/run_benchmark.py  -      -            
+     0.01%  [.] py::BTree.__delitem__:./benchmark/optimized/bm_btree/run_benchmark.py             -      -            
+     0.01%  [.] py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py                     -      -            
+     0.01%  [.] py::Random.randbytes:/usr/lib/python3.12/random.py                                                                           -      -            
+     0.01%  [.] py::Record.__init__:./benchmark/optimized/bm_btree/run_benchmark.py               -      -            
+     0.01%  [.] py::_simple:/usr/lib/python3.12/re/_compiler.py                                                                              -      -            
+     0.01%  [.] set_traverse.lto_priv.0                                                                                                      -      -            
+     0.01%  [.] slice_dealloc.lto_priv.0                                                                                                     -      -            
+     0.01%  [.] slot_tp_iter.lto_priv.0                                                                                                      -      -            
+     0.01%  [.] type_ready.lto_priv.0                                                                                                        -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

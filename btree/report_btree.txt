@@ -1,0 +1,936 @@
+================================================================================
+  report_btree.txt
+  HW/SW Co-Design Project -- Benchmark Optimization, Analysis and Hardware
+  Acceleration Proposal
+  Benchmark: pyperformance "btree" (pyperformance 1.14.0, bm_btree)
+================================================================================
+
+Author      : Gal Dvir
+Date        : 2026-10-03 (first version 2026-09-21)
+Environment : the course VM -- QEMU/KVM guest on naranja4 with one vCPU of an
+              Intel Xeon E5-2630 v3 (Haswell, 2.40 GHz) and 4 GB; Ubuntu 22.04.5,
+              Linux 5.15 (kvm); perf 5.15. All timings and profiles in this
+              report were measured there; results/ holds the files.
+Interpreter : CPython 3.12.15 (deadsnakes build for 22.04, LTO/PGO, no frame
+              pointers) for the measurements; python3.12-dbg 3.12.15 for the
+              symbol-level perf profiles (it keeps frame pointers).
+Cross-check : the same flow on a bare-metal host with the same CPU model
+              (naranja13, 2 sockets, Ubuntu 24.04, CPython 3.12.3 Ubuntu build):
+              results/host_bare_metal/. It is the only source for the cache
+              counters the virtual PMU does not expose (section 2.5).
+Tools       : pyperformance 1.14.0, pyperf 2.10.0, FlameGraph (brendangregg),
+              Verilator 5.052 (built from source)
+Repository  : see README.md for the file map. script_btree.sh reproduces every
+              software number in this report (setup | benchmark | flamegraph | compare);
+              the hardware results come from Hw__Additional_Files/hw/run_hw.sh.
+
+Contents
+  1. Overview            -- what the benchmark does, libraries, data structures
+  2. Initial Analysis    -- pyperformance baseline, per-phase timing, perf,
+                            flame graphs, hardware counters
+  3. Optimizations       -- what was changed and why it is legitimate
+  4. Performance Comparison
+  5. Hardware Acceleration Proposal -- Node Search Unit (SystemVerilog)
+  6. Conclusion
+  Appendix A. Files and how to reproduce
+  Appendix B. Measurement notes (perf on this host)
+
+
+--------------------------------------------------------------------------------
+1. OVERVIEW
+--------------------------------------------------------------------------------
+
+1.1 Purpose of the benchmark
+
+bm_btree builds and operates on a B-tree of 200,000 entries implemented in pure
+Python. Its docstring states the intent: "exercise the cyclic garbage collector
+by presenting it with a large and interconnected object graph". It stands in
+for applications that hold many Python objects in RAM and process them. There
+are two variants: "btree" (the full workload, used here) and "btree_gc_only"
+(times only the explicit gc.collect()).
+
+1.2 Libraries
+
+Only the standard library: random (record generation and key shuffling), gc
+(explicit collection), sys (string interning), and pyperf (the timing harness
+every pyperformance benchmark uses). No third-party packages.
+
+1.3 Data structures and algorithms
+
+  BTree     -- holds the root BNode; dict-like API (__setitem__, __getitem__,
+               __delitem__, get, __iter__, __len__).
+  BNode     -- one tree node, __slots__ = ['items', 'nodes'].
+               items : Python list of (key, value) tuples, sorted by key.
+               nodes : list of child BNodes (None for a leaf).
+               minimum_degree t = 16  ->  15..31 items per node (root may have
+               fewer), 16..32 children per internal node.
+  Record    -- the stored value: plain object with 6 attributes
+               (int, str, bytes of 0..99 B, float, interned str, None/bool).
+
+  Order of the tree. The code uses the CLRS parameter "minimum degree"
+  t = 16. In the other common conventions the same tree is:
+    CLRS (Cormen et al.)     minimum degree t = 16 : t-1 .. 2t-1 = 15..31 keys,
+                             t .. 2t = 16..32 children
+    Knuth                    order m = 32 (maximum number of children); every
+                             non-root node has at least ceil(m/2) = 16 children
+    Bayer & McCreight (1972) k = 15 (minimum keys); note their maximum is 2k =
+                             30 keys, so the CLRS tree with its odd maximum of
+                             31 keys is not exactly a Bayer B-tree of order 15
+  So: a B-tree of order 32 in Knuth's sense, minimum degree 16 in CLRS's, with
+  a branching factor of 16..32. The odd maximum (2t-1 = 31) is what lets a full
+  node split into two nodes of t-1 = 15 keys plus one median that moves up.
+
+The tree is the CLRS B-tree of minimum degree 16 (Knuth order 32) (Cormen,
+Leiserson, Rivest, Stein, ch. 18; the code cites "19.3 of Introduction to
+Algorithms", the first edition's chapter):
+  * search: at each node find the first key >= query (BNode.get_position),
+    descend into the child at that position; height 3 below the root.
+  * insert: CLRS single-pass insertion -- a full root is split before
+    descending, a full child is split proactively on the way down
+    (split_child moves the median key up), and the item is inserted at a leaf.
+  * delete: CLRS single-pass deletion with the textbook cases 1, 2a/2b/2c,
+    3a/3b (borrow from a sibling or merge with it on the way down so that the
+    recursive call never lands on a node at minimum fill).
+  * iteration: recursive generators (yield from) over items and children.
+It is a plain B-tree (values in every node), not a B+-tree.
+
+1.4 The timed workload (one loop of run_once)
+
+  a. insert all 200,000 (key, Record) pairs in a shuffled key order
+  b. delete the 40,000 lowest keys (RECREATE_FRACTION = 0.2)
+  c. re-insert those 40,000
+  d. one explicit gc.collect()
+  e. iterate every key in order and look each one up (BTree.__getitem__)
+  f. 10,000 random lookups via BTree.get
+Record creation (make_records) is outside the timed region. The pyperf Runner
+is configured by the benchmark itself: 1 process, 1 warm-up, 3 values, 1 loop
+per value (each loop is ~5 s, unusually long for pyperformance).
+
+Tree shape after the build (measured, scripts/analyze_btree.py):
+  10,150 nodes (9,612 leaves, 538 internal), height 3 (1 -> 26 -> 511 ->
+  9,612 nodes per level), mean fill 19.7 items/node (min 15, max 31),
+  keys are ints < 200,000 (18 bits). Memory: the tree structure itself is
+  19-23 MB (10.7 MB of tuples, 5.3 MB of int objects, 2.4 MB of lists); the
+  Records add 68 MB but are only touched when a value is returned.
+
+
+--------------------------------------------------------------------------------
+2. INITIAL ANALYSIS
+--------------------------------------------------------------------------------
+
+2.1 pyperformance baseline (release interpreter)
+
+  $ python -m pyperformance run --manifest benchmark/original/MANIFEST -b btree \
+        -o results/baseline/btree_baseline_default.json
+  btree: Mean +- std dev: 3.19 sec +- 0.10 sec        (3 values, 1 process)
+
+Reference run for statistical comparison (same script through pyperf directly,
+10 processes x 3 values = 30 values; results/baseline/btree_baseline_rigorous.json):
+  Mean +- std dev: 3.11 sec +- 0.05 sec, min 3.07, max 3.33.
+Run-to-run noise is ~1.6 % in the VM (one vCPU, shared host), so the 7 %
+threshold of the assignment is still more than four standard deviations away.
+Bare-metal cross-check (results/host_bare_metal/baseline/): 5.06 s +- 0.03 with
+Ubuntu 24.04's CPython 3.12.3 build on the same CPU model; the course VM's
+interpreter is an LTO/PGO build and runs the same code 1.6x faster, which
+changes every absolute time below but none of the ratios or conclusions.
+
+2.2 Per-phase timing (scripts/analyze_btree.py, median of 3 loops)
+
+  phase                              seconds   share
+  ---------------------------------  -------   -----
+  a  build: insert 200k                 1.52   47.8 %
+  b  delete 40k                         0.15    4.7 %
+  c  re-insert 40k                      0.26    8.2 %
+  d  explicit gc.collect()              0.21    6.6 %
+  e  iterate all + lookup each          0.87   27.5 %
+  f  10k random lookups                 0.07    2.1 %
+     total run_once                     3.18
+
+Automatic GC triggered during the build: 341 gen-0, 30 gen-1 and 1 gen-2
+collections, 0.30 s = 9.5 % of the loop. Total garbage collection (automatic
++ explicit) is therefore ~16 % of the run. Despite the docstring, the
+benchmark is dominated by the B-tree operations themselves, not by the GC.
+
+2.3 perf profile and flame graphs
+
+Recording (Appendix B explains the flags):
+  $ perf record -e cycles:u -c 2000000 -g -- python -X perf \
+        scripts/profile_btree.py --loops 2
+  $ perf script | stackcollapse-perf.pl > results/flamegraphs/baseline_release.folded
+  $ flamegraph.pl ... > results/flamegraphs/baseline_release_full.svg   (+ _python.svg, Python frames only)
+`-X perf` makes CPython 3.12 emit a perf map, so Python functions can appear by
+name (py::BNode.search ...) in the stacks -- provided perf can walk the
+interpreter's frames. The VM's release interpreter (deadsnakes 3.12.15) is
+built without frame pointers, so its profile shows C symbols only; the
+Python-level attribution therefore comes from the python3.12-dbg recording
+(course-guide style, results/flamegraphs/baseline_debug_*.svg), which keeps
+frame pointers. The debug build adds debug-only work (validate_list 16 %,
+_Py_DECREF_DecRefTotal, _PyMem_Debug*) that inflates the GC and allocator
+rows and must not be read as hotspots; the ranking of the Python functions is
+what counts. The bare-metal cross-check, whose release interpreter has frame
+pointers, gives the same picture without that distortion
+(results/host_bare_metal/flamegraphs/: get_position 45 % of samples, 50 % of
+the timed loop).
+
+Inclusive share of samples per Python function, python3.12-dbg
+(results/flamegraphs/baseline_debug.summary.txt; run_once = 88.9 % of all samples,
+make_records = 9.4 % is the untimed record generation):
+
+  Python function                          % of samples   % of timed loop
+  ---------------------------------------  ------------   ---------------
+  make_tree                                    62.3            70
+  BTree.add / BNode.insert_item             52.7 / 50.9       59 / 57
+  BNode.get_position   <-- hotspot             50.5            57
+  BTree.__getitem__ / BNode.search          20.6 / 19.9       23 / 22
+  BNode.is_full                                 4.6             5.2
+  BNode.delete                                  4.4             4.9
+  BTree.__iter__                                1.5             1.7
+  GC (gc_collect_main + visitors)              22.9  (debug build: validate_list)
+  allocator (PyObject_Malloc/Free)              9.5  (debug build: _PyMem_Debug*)
+  list iteration (listiter_next, enum_next)     6.0
+
+Flat self time in the release profile (results/flamegraphs/baseline_release.summary.txt):
+_PyEval_EvalFrameDefault (the bytecode interpreter loop) 52 %, listiter_next
+6.1 %, enum_next 3.8 %, gc_collect_main 3.3 %. listiter_next and enum_next are
+the machinery of `for position, item in enumerate(self.items)`, i.e. the
+get_position loop itself.
+
+Readable flame graphs (Python frames only, rooted at run_bench, fit to the
+browser window, click to zoom): results/flamegraphs/baseline_debug_python.svg
+(the release build of the VM's interpreter has no frame pointers, so its
+Python-only graph cannot be produced there; results/host_bare_metal/flamegraphs/
+baseline_release_python.svg is the release-build equivalent). The *_full.svg
+versions keep every interpreter frame (up to ~130 deep). All flame graphs,
+folded stacks and perf reports are in results/flamegraphs/ (see its README.md).
+
+2.4 The bottleneck: linear key scan inside each node
+
+    def get_position(self, key):                    # run_benchmark.py:58
+        for position, item in enumerate(self.items):
+            if item[0] >= key:
+                return position
+        return len(self.items)
+
+Every insert, delete and lookup reaches ~4 nodes root-to-leaf and calls this
+at each of them. Counted over one loop (analyze_btree.py, section 4):
+
+  phase                     get_position calls   key comparisons   cmp/call
+  ------------------------  ------------------   ---------------   --------
+  build                            784,998          7,930,463        10.1
+  delete 40k                       160,000            160,000         1.0
+  re-insert 40k                    160,000          2,540,283        15.9
+  iterate + lookup                 789,854          9,367,988        11.9
+  random lookups                    39,852            473,218        11.9
+  total                          1,934,704         20,471,952        10.6
+
+Each comparison executes 11 bytecodes (FOR_ITER, UNPACK_SEQUENCE, 2x
+STORE_FAST, LOAD_FAST, LOAD_CONST, BINARY_SUBSCR, LOAD_FAST, COMPARE_OP,
+POP_JUMP_IF_TRUE, JUMP_BACKWARD) and follows three pointers (list -> tuple ->
+int object -> value): ~225 M bytecodes per loop for key comparisons alone.
+Micro-benchmark on nodes of the measured fill (scripts/microbench_search.py):
+
+  in-node search variant                    ns/call   speedup
+  ----------------------------------------  -------   -------
+  baseline for/enumerate linear scan          1,008     1.00x
+  while-loop linear scan                        950     1.06x
+  bisect_left(items, key=named function)        722     1.40x
+  bisect_left on a parallel plain-int list      352     2.86x
+  (floor: empty Python method call)             157
+
+1.93 M calls x ~0.66 us saved = ~1.3 s of the 3.1 s loop -- consistent with
+the ~50 % attribution from perf. (Bare metal, CPython 3.12.3: 1,668 -> 513 ns,
+3.25x; the floor is 206 ns there.)
+
+2.5 Is it memory-bound, as B-tree theory assumes?  No.
+
+Hardware counters in the course VM (user space only). KVM virtualises the core
+counters but not the cache-miss events of the last level: in this guest
+`perf stat` reads cycles:u as 0 and LLC-loads as <not supported>, while the
+same counters opened from inside the process (scripts/phase_counters.py,
+results/baseline/perf_phase_counters_release.txt) deliver cycles and
+instructions, and the L1 and L2 events work in both. Over the six phases of
+one loop:
+  counter                        value              derived
+  -----------------------------  -----------------  ---------------------------------
+  cycles                          7.08 G            2.95 s at 2.4 GHz = the loop time
+  instructions                   16.17 G            IPC 2.28 (memory-bound code sits
+                                                    well below 0.5)
+  L1-dcache loads / misses        5.93 G / 151 M    miss rate 2.54 %  (perf stat)
+  L2 demand data reads            106.3 M           (perf stat, l2_rqsts events)
+    of which hits / misses        59.7 M / 46.6 M   43.8 % miss
+  L2 references / misses          246.6 M / 99.3 M  40.3 % miss
+  LLC loads / misses              not virtualised   see the bare-metal run below
+  instructions per get_position call: ~800 (16.2 G / 1.93 M calls, upper bound)
+
+Where the LLC misses go is measured on the bare-metal host with the same CPU
+model (results/host_bare_metal/baseline/perf_stat_btree_rel.txt and
+perf_phase_counters_release.txt; CPython 3.12.3, so the cycle counts are
+higher but the memory traffic is the same code touching the same objects):
+  counter                        exact            short    derived
+  -----------------------------  ---------------  -------  ----------------------------------
+  cycles                          15,435,490,470  15.4 G
+  instructions                    22,290,154,106  22.3 G   IPC 1.44
+  L1-dcache loads                  6,497,042,780  6.50 G
+  L1-dcache load misses              140,619,376   141 M   miss rate 2.16 %
+  LLC loads                           52,428,135  52.4 M
+  LLC load misses                     10,480,968  10.5 M   miss rate 20.0 %; one DRAM
+                                                           access per ~1,470 cycles
+  branch instructions              3,940,387,170  3.94 G
+  branch misses                       12,363,758  12.4 M   miss rate 0.31 %
+  L2 demand data reads (= L1 D misses)     107,385,919
+    of which hits / misses                  65,465,518 / 41,846,879   39.0 % miss
+  L2 references / misses, all types        249,270,869 / 87,832,269   35.2 % miss
+Cache-level view of one loop: L1 D 6.5 G loads, 2.2 % miss -> L2 107 M data
+reads, 39 % miss -> LLC 52 M loads, 20 % miss -> DRAM 10.5 M lines. Per 1,000
+L1 loads about 16 reach L2, 8 the LLC, under 2 DRAM: the hierarchy absorbs the
+traffic and the loop is bound by instruction count, not by memory.
+The working set is ~91 MB (tree structure 19-23 MB + records 68 MB; measured
+with scripts/memory_footprint.py: process RSS before/after make_records and
+make_tree, plus sys.getsizeof over the tree's objects, in
+results/baseline/memory_footprint_release.txt; identical in the VM and on bare
+metal) and does not fit the 20 MB L3 of the physical CPU. (The VM advertises
+a synthetic 4 MB L2 / 16 MB L3 topology to the guest; the silicon underneath
+is the same Haswell with 256 KB L2 per core and 20 MB L3 per socket.)
+Where the LLC misses come from was measured per phase with the same counters
+read around each phase of the loop (scripts/phase_counters.py, perf_event_open
+from inside the process; bare-metal host,
+results/host_bare_metal/baseline/perf_phase_counters_release.txt):
+
+  phase of the loop                       cycles   LLC misses   note
+  --------------------------------------  -------  -----------  --------------------------------
+  build: insert 200k, shuffled order       5.5 G      4.3 M     ~1.2 M of it = automatic gen-1/2
+                                                                 collections (build with GC off:
+                                                                 3.2 M), the rest random-order
+                                                                 node access + allocation
+  delete 40k                               0.7 G      0.1 M
+  re-insert 40k                            1.4 G      2.3 M     allocation into freed memory
+  explicit gc.collect()                    0.3 G      2.5 M     walks the whole heap once
+  iterate all + lookup each (reads .d)     3.5 G      0.5 M     in-order; the prefetcher streams
+                                                                 the records (touching all 200k
+                                                                 records once costs 0.03 M)
+  random lookups 10k                       0.3 G      0.2 M
+  total                                   11.7 G     10.0 M     (perf stat over the whole
+                                                                 process: 10.5 M incl. make_records)
+  200k lookups, records NOT read           2.8 G      0.4 M     the node searches alone
+
+So the misses belong to the garbage collector (the explicit collection plus
+the automatic ones during the build: 3.7 M; a collection walks every object,
+records included) and to the shuffled-order inserts and re-inserts (5.5 M);
+the lookups themselves barely miss: 200,000 node searches cost 0.4 M misses,
+2 per thousand searches. The search's hot set (tuples + int
+keys 16 MB, 19 MB with the lists and BNodes, by getsizeof) is resident, so a
+node fetch costs tens of cycles while one interpreted key comparison costs
+~310 cycles. The classic B-tree trade-off
+(many cheap compares to save one expensive fetch) is inverted by the
+interpreter: the compares are the cost. This is why the software fix and the
+accelerator both attack instruction count, not memory traffic.
+
+
+--------------------------------------------------------------------------------
+3. OPTIMIZATIONS
+--------------------------------------------------------------------------------
+
+3.1 The change
+
+Replace the interpreted linear scan with a C binary search over a plain list
+of the node's keys. Each BNode gets a third slot `keys` (a list of ints,
+parallel to `items`); get_position becomes one call to bisect.bisect_left.
+
+  BEFORE: benchmark/original/bm_btree/run_benchmark.py
+  AFTER : benchmark/optimized/bm_btree/run_benchmark.py
+
+  before                                                  after
+  ------------------------------------------------------  ------------------------------------------
+  import gc                                               import gc
+                                                          from bisect import bisect_left
+  class BNode:                                            class BNode:
+      __slots__ = ['items', 'nodes']                          __slots__ = ['items', 'keys', 'nodes']
+      def __init__(self):                                     def __init__(self):
+          self.items = []                                         self.items = []
+                                                                  self.keys = []
+      def get_position(self, key):                            def get_position_opt(self, key):
+          for position, item in enumerate(self.items):            return bisect_left(self.keys, key)
+              if item[0] >= key:
+                  return position                             get_position = get_position_opt
+          return len(self.items)
+
+Every place that mutates `items` mirrors the same operation on `keys`, one
+line each: the leaf insert in insert_item; the two slices and the median
+insert in split_child; each del / replacement / shift / concatenation in the
+seven delete cases; and the root-shrink assignment. The alias
+`get_position = get_position_opt` keeps the three call sites (search,
+insert_item, delete) untouched. The complete diff is
+benchmark/btree_optimization.diff: 6 lines removed, 27 added, out of 436.
+The file is generated mechanically from benchmark/original by
+scripts/make_optimized.py, which asserts the expected text at every anchor.
+
+3.2 Why this is a legitimate optimization of the benchmark
+
+  * Same workload: records, shuffled insert order, the 20 % delete/re-insert
+    phase, the explicit gc.collect(), the iteration and the lookups are
+    byte-identical; the pyperf Runner settings and the benchmark name are
+    unchanged. The tree shape (nodes, fill, height) is identical.
+  * Same algorithm class: the keys were already sorted; the node is still a
+    flat sorted array. Only "linear scan" became "binary search" -- exactly the
+    "replace an algorithm with a faster one" the assignment asks for.
+  * Same object graph for the GC (the benchmark's stated purpose): the
+    (key, record) tuples remain; the keys list adds 10,150 small list objects
+    (references to the existing int objects, ~1.6 MB) to a graph of 441,000.
+    The btree_gc_only variant is NOT faster after the change (explicit
+    collection 150 ms vs 139 ms), which shows the gain does not come from
+    doing less GC work.
+  * Equivalence proven, not assumed: tests/test_btree_equivalence.py builds the
+    original and the optimized tree from the same records in the same order
+    and compares them node by node (keys, values, child counts, height,
+    iteration order) after build, delete, re-insert and value replacement;
+    checks keys[i] == items[i][0] in every node; runs 10,000 lookups and
+    out-of-range misses on both. It passes at N = 200,000.
+
+3.3 Alternatives considered and rejected
+
+  * bisect with key=itemgetter(0) on the tuple list (no parallel list): only
+    1.26x per call because each probe calls back into Python. Kept as a data
+    point (microbench).
+  * Removing the tuples (parallel keys and values lists): faster still, but
+    removes 200,000 objects from the graph the GC benchmark exists to measure
+    and rewrites most of the file. Out of scope for a benchmark optimization.
+  * gc.freeze()/gc.disable() during the build: changes what is measured;
+    rejected.
+  * Iterative __iter__, fewer is_full/len calls: ~2 % and ~6 % potential,
+    not needed once the main hotspot is gone; left for future work.
+
+
+--------------------------------------------------------------------------------
+4. PERFORMANCE COMPARISON
+--------------------------------------------------------------------------------
+
+4.1 pyperformance / pyperf results (release CPython 3.12.3)
+
+The optimized benchmark runs through the same pyperformance harness under the
+same benchmark name via a manifest (benchmark/optimized/MANIFEST), so pyperf compare_to
+can pair the results.
+
+  $ python -m pyperformance run --manifest benchmark/optimized/MANIFEST -b btree \
+        -o results/optimized/btree_opt_default.json
+  $ python -m pyperf compare_to results/baseline/btree_baseline_default.json \
+        results/optimized/btree_opt_default.json --table
+
+  +-----------+------------------------+------------------------+
+  | Benchmark | btree_baseline_default | btree_opt_default      |
+  +===========+========================+========================+
+  | btree     | 3.19 sec               | 1.94 sec: 1.64x faster |
+  +-----------+------------------------+------------------------+
+
+  10 processes x 3 values (30 values each side):
+  +-----------+-------------------------+------------------------+
+  | Benchmark | btree_baseline_rigorous | btree_opt_rigorous     |
+  +===========+=========================+========================+
+  | btree     | 3.11 sec                | 1.94 sec: 1.60x faster |
+  +-----------+-------------------------+------------------------+
+  optimized: mean 1.94 +- 0.03 s, min 1.92, max 2.07.
+
+  Loop time 3.11 s -> 1.94 s  =  -37.6 %  (assignment threshold: 7 %).
+
+  Back-to-back confirmation (2026-10-03, both versions run one after the other,
+  10 processes x 3 values each; results/flamegraphs/timing_back_to_back.txt):
+  +-----------+-----------------+------------------------+
+  | Benchmark | timing_baseline | timing_optimized       |
+  +===========+=================+========================+
+  | btree     | 3.07 sec        | 1.94 sec: 1.59x faster |
+  +-----------+-----------------+------------------------+
+  baseline 3.07 +- 0.03 s (min 3.05, max 3.20); optimized 1.94 +- 0.03 s
+  (min 1.92, max 2.07). The two independent measurements agree within 1.5 %.
+  Bare-metal cross-check (results/host_bare_metal/optimized/): 5.06 s -> 3.07 s,
+  1.65x; back to back 5.03 s -> 3.09 s, 1.63x. The ratio is the same within
+  noise in both environments.
+
+4.2 Profile after the change (results/flamegraphs/optimized_*.summary.txt,
+    same VM and settings as the baseline recordings)
+
+  Python-level, python3.12-dbg recordings (frame pointers; debug-only work
+  inflates the GC/allocator rows equally on both sides):
+  Python function            before (% samples)   after (% samples)
+  -------------------------  ------------------   -----------------
+  get_position / _opt              50.5                  9.7  (28.8 G -> 4.3 G samples)
+  BNode.insert_item                50.9                 51.5
+  BNode.search                     19.9                 11.2
+  make_records (untimed)            9.4                 12.1  (5.36 vs 5.34 G: unchanged)
+
+  C-level self time, release recordings (results/flamegraphs/*_release.summary.txt):
+  symbol                                  before     after
+  --------------------------------------  --------   --------
+  _PyEval_EvalFrameDefault (interpreter)   51.8 %     42.9 %
+  listiter_next + enum_next (the scan)      9.9 %      0.5 %
+  internal_bisect_left (the C search)         --       2.5 %
+  GC (gc_collect_main + visitors)           6.0 %      8.6 %   (same work, smaller total)
+  total samples, 2 loops                   19.0 G     13.5 G
+
+Flame graphs: results/flamegraphs/optimized_debug_python.svg (Python functions)
+and optimized_release_full.svg (full stacks). The remaining share of
+get_position_opt is the Python method call/return around one C call -- the
+floor that the hardware proposal targets. Bare-metal cross-check with a
+frame-pointer release build (results/host_bare_metal/flamegraphs/): get_position
+45.0 % -> 11.5 % of samples, 12.2 G -> 2.3 G cycles.
+
+
+--------------------------------------------------------------------------------
+5. HARDWARE ACCELERATION PROPOSAL -- NODE SEARCH UNIT (NSU)
+--------------------------------------------------------------------------------
+
+Full design note: hw/NSU_DESIGN.md. RTL (SystemVerilog, no parameters, fitted
+to this benchmark): hw/rtl/nsu_top.sv is the NSU -- an execution unit behind
+one instruction that compares the node's keys line by line as they arrive from
+the L1 D-cache and stops as soon as the result is known (streaming early-out).
+hw/rtl/nsu_top_fixed.sv + hw/rtl/nsu_core.sv is the fixed 31-lane design it
+evolved from, kept as the reference (section 5.7b). Testbenches: hw/tb/tb_nsu.sv,
+hw/tb/tb_nsu_fixed.sv. Block diagram: hw/block_diagram_system.svg (section 5.5).
+
+5.1 Component selected and justification
+
+The in-node key search (get_position) is ~50 % of the baseline loop, runs
+1.93 M times per loop and is, after the software fix, bounded by the cost of
+calling into C. It is an ideal hardware primitive:
+  * fixed width and data-parallel: <= 31 keys (2t-1, t = 16) compared against
+    one query with no dependence between lanes;
+  * sorted input: once one key >= query has been seen, every later key is
+    also >= query, so the unit can stop reading as soon as that line is in;
+  * tiny state: a 32-bit query, a 5-bit count, a 5-bit running position;
+  * a precise contract (bisect_left) that lets the same vectors verify the
+    Python code, the model and the RTL;
+  * generic: "rank of a value in a sorted vector" is the primitive of every
+    B-tree / B+-tree / sorted-array / bucket-index search -- an ISA extension
+    that is useful beyond this benchmark, as the assignment suggests.
+The GC (10 %) and the allocator (5 %) were the other candidates; both are
+irregular pointer-chasing over the whole heap and far less generic.
+
+5.2 The instruction and its function
+
+  nsrch rd, rs1, rs2
+    rs1 : address of the node block (128 B aligned)
+    rs2 : query key, 32-bit unsigned, in bits 31:0
+    rd  : bit 8 = found, bits 4:0 = position (other bits 0)
+
+  position = |{ i < count : key[i] <  query }|     (0..31)   == bisect_left
+  found    =  exists i < count : key[i] == query
+
+Node block in memory: 32 entries of 32 bits each = 128 B = exactly two cache
+lines, 128 B aligned. Entry 0 is the header: the key count (0..31). Entries
+1..31 are the keys k0..k30, sorted, unsigned. Line 0 holds entries 0..15 (the
+header and k0..k14), line 1 entries 16..31 (k15..k30). Storing the count in the
+block is what lets the instruction take only an address and a query: the unit
+reads the count itself, from entry 0 of the first line. ("Entry" is used on
+purpose: a 32-bit slot, not a machine word, which means 16 or 32 bits depending
+on the ISA manual.)
+
+Key width. The keys are 32-bit unsigned. The benchmark's keys are ints below
+200,000, so 32 bits lose nothing here and halve the block (two lines instead
+of four) and the comparator width compared with 64-bit keys; a 4-billion key
+space still covers most indexes. Python ints outside 0..2^32-1 take the
+software path (bisect_left), so correctness never depends on the width.
+
+5.3 Inputs and outputs (hw/rtl/nsu_top.sv)
+
+  issue (from the execute stage): issue_valid(1), rs1_addr(64), rs2_query(64,
+       key in bits 31:0); busy(1) while an instruction is in flight (one at a
+       time)
+  L1 D-cache line port, read only (one 64-byte line per request, in order):
+       mem_req_valid/ready, mem_req_addr(64); mem_rsp_valid, mem_rsp_data
+       (one cache line, 64 B = 16 entries, per response -- a design choice, not
+       the host's bus width)
+  writeback: rd_valid(1), rd_data(64) = {found, position}
+  clock / reset: clk, rst_n (single clock, asynchronous active-low reset)
+
+Operating frequency: stage 1 (16 parallel 32-bit magnitude + equality
+comparators and the valid mask) and stage 2 (16-bit popcount adder tree, a
+5-bit add and a 16-input OR) each fit one cycle at 1.5 GHz and above in a
+28 nm ASIC flow, ~400 MHz on a mid-range FPGA; the critical path is a 32-bit
+comparator followed by the 16-input OR that forms the boundary flag. Fitted to
+the benchmark on purpose: 32-bit keys, 32-entry blocks, no parameters, no
+options, no software-visible registers.
+
+5.4 Architecture (one line per cycle, early exit)
+
+  1. Issue. The execute stage presents rs1 and rs2 with issue_valid; Control
+     copies them into its own registers (the pipeline's operand buses
+     change next cycle) and raises busy.
+  2. Fetch. Control issues the two line requests rs1 and rs1 + 64 back to
+     back; the lines return in order. Entry 0 of line 0, the header, loads the
+     key count register (for line 0 the count is taken live from the arriving
+     data).
+  3. Line compare (stage 1), on every arriving line: 16 lanes, lane k holds
+     entry k of the line. valid[k] = (1 <= 16*line + k <= count) masks out the
+     header entry and the slots beyond the count. Each lane produces lt[k] =
+     valid & (key < query) and eq[k] = valid & (key == query). The early-exit
+     decision is taken here too, from the same lane outputs: boundary =
+     any(valid & ~lt) -- some valid key in this line is >= query, so the
+     first key >= query is in this line and no later line can change the
+     answer; last = this is the last line that holds keys (line == count >>
+     4). lt, eq, boundary and last are registered (S1).
+  4. Accumulate (stage 2). The adder tree does not decide anything; it only
+     counts: popcount(lt[15:0]) = how many keys of this line are < query, a
+     16 -> 5 reduction (8 half adders, 4 adders, 2 adders, 1 adder). A 5-bit
+     adder adds that to the running position; found |= any(eq[15:0]) through
+     a 16-input OR. Both live in the S2 registers, which are the running
+     result: after the boundary line, position = number of keys < query over
+     the whole node = bisect_left, and found = whether any key equalled the
+     query.
+  5. Early exit. When boundary | last was set for a line, the S2 value after
+     that line is final: rd = {found, position} is written with rd_valid,
+     Control stops issuing requests, and a line already requested is drained
+     and ignored. busy drops when the last requested line is in. Note that
+     found alone never stops the search: an equal key is also >= query, so it
+     sets boundary, and the position is still needed.
+
+Measured in simulation (3-cycle L1 latency, ready stalled 1 cycle in 4), over
+all 3,210 vectors: issue -> rd_valid 7..9 cycles, average 7.7; busy 9.3
+cycles per instruction (the drain); histogram of the latency:
+  7 cycles: 1,707   8: 824   9: 679
+On the real tree the boundary falls in line 0 (the header and the first 15
+keys) for 53 % of the searches and in line 1 for 47 %: 1.47 of the 2 lines
+are needed on average.
+
+5.5 Block diagram
+
+One drawn figure accompanies this report (generated by hw/make_block_diagram.py;
+SVG and a 2800 px PNG, open in a browser or import into the presentation):
+  hw/block_diagram_system.svg  Figure 1 -- system integration: CPU core with the
+                               software stack, the 5-stage pipeline whose execute
+                               stage feeds ALU, LSU and the NSU, the L1 D-cache
+                               (read-only line port into the NSU) and L2; a
+                               dashed zoom-out of the NSU internals (Control,
+                               key-count register, the 16-lane line compare with
+                               the valid mask and the S1 register, the popcount /
+                               running-position / found accumulators in S2, the
+                               early-exit decision and its path back to Control,
+                               writeback to rd); the on-chip interconnect and the
+                               shared LLC where the tree resides; bottom right,
+                               the encoding of the node block in memory (header
+                               entry + 31 keys, 2 lines); at the far right, the
+                               latency cycle by cycle (issue, two line requests,
+                               three cycles of L1 latency, compare, accumulate +
+                               decision, writeback: 7 cycles when the result is
+                               in line 0, 8 when it is in line 1, 9 with a port
+                               stall).
+ASCII sketch of the NSU internals for this text file:
+
+   execute stage ---- rs1 (node address), rs2 (query) ----+
+                                                           v
+  +--------------------------------------------------------------------------+
+  |  nsu_top                                                                 |
+  |                                                                          |
+  |  Control: copy rs1, rs2; issue 2 line requests (rs1, rs1 + 64); count    |
+  |           the returned lines; stop requesting and drain once the result  |
+  |           is known (boundary | last)                                     |
+  |      |                                      requests ^      | lines      |
+  |      | query                                rs1+64*j |      v 64 B each  |
+  |      |                                 ====== L1 D-cache line port ======|== L1
+  |      |                                 (read only, lines return in order)|
+  |      |                                                     |             |
+  |      |                 entry 0 of line 0 -> [key count]    | 16 entries  |
+  |      v                                           |         v             |
+  |  +--------------------------------------------------------------------+  |
+  |  | line compare + accumulate   (one arriving line per clock)          |  |
+  |  |                                                                    |  |
+  |  |  S1  16 lanes, lane k = entry k: lt[k] = valid[k] & (key <  query) |  |
+  |  |                                  eq[k] = valid[k] & (key == query) |  |
+  |  |      valid[k] = (1 <= 16*line+k <= count)                          |  |
+  |  |      boundary = any(valid & ~lt)     last = (line == count >> 4)   |  |
+  |  |                                                                    |  |
+  |  |  S2  position += popcount(lt[15:0])  found |= any(eq[15:0])        |  |
+  |  |      boundary | last  ->  result final, early exit                 |  |
+  |  +--------------------------------------------------------------------+  |
+  |                                     |  rd = {found, position}, rd_valid  |
+  +-------------------------------------|------------------------------------+
+                                        v
+                                  writeback stage
+
+5.6 Hardware/software interface and required software changes
+
+Data layout: each node keeps its keys in a 32-entry array.array('I') (32-bit
+unsigned entries): entry 0 = key count, entries 1..31 = keys, 128 B aligned
+(two cache lines). This replaces the plain keys list of the optimized
+benchmark; the (key, record) tuples stay. Maintenance is the same one-line
+mirroring already present in the optimized code plus keeping entry 0 equal to
+len(items) (hw/sw/nsu_get_position.py).
+
+ISA: one new R-type instruction, nsrch rd, rs1, rs2, decoded to the NSU as a
+multi-cycle functional unit beside the ALU and LSU. It reads memory through
+the L1 D-cache port (read only), so it behaves like a load with a variable
+7..9-cycle latency: the scoreboard holds rd until rd_valid and the usual
+load-ordering rules apply (stores to the node block before the nsrch are
+visible to it via the L1). busy stays high a cycle or two after rd_valid
+while the unit drains a line it no longer needs; a second nsrch waits for it.
+
+Runtime: a C extension exposes nsrch(node_addr, query) through an inline-asm
+intrinsic; BNode.get_position_hw calls it with the array's buffer address and
+falls back to bisect_left when the instruction is absent or the key is outside
+0..2^32-1. No driver, no memory-mapped registers, no polling, no pinning: the
+node block is ordinary user memory and the instruction reads it like a load.
+
+5.7 Acceleration estimate (assumptions stated)
+
+Per loop (course VM): 1.93 M calls; ~1.55 s in the search today (50 % of the
+3.11 s loop, section 2.3); ~1.56 s in everything else. The search times below
+scale the measured 1.55 s by the micro-benchmark ratios of section 2.4.
+
+  variant                                ns/node search  search/loop  loop     vs base
+  -------------------------------------  --------------  -----------  ------   -------
+  baseline linear scan (measured)              1,008         1.55 s    3.11 s    1.00x
+  bisect on keys list (measured)                 352         0.54 s    1.94 s    1.60x
+  nsrch instruction, L1 hit (estimate)          ~160         0.25 s   ~1.81 s    ~1.72x
+  theoretical floor (search cost -> 0)             0         0        1.56 s    1.99x
+
+Assumptions: the interpreter call overhead (157 ns, measured) is unchanged;
+the node block hits L1/L2 (measured L1 miss 2.5 %, IPC 2.3 over the loop; the
+search's hot set of 16-19 MB is LLC-resident although the 68 MB of records are
+not -- the search never touches them; the 1.3 MB of key blocks even more so);
+7.7 cycles at 2.4 GHz ~ 3 ns; nothing else in the benchmark changes. (On the
+bare-metal host with its slower interpreter build the same estimate reads
+1,668 -> 513 -> ~210 ns and 5.06 -> 3.07 -> ~2.98 s, 1.69x, floor 1.96x.)
+Conclusion: under CPython the instruction removes essentially all of the
+search cost but Amdahl's law caps the loop near 1.7x, because allocation,
+tuple handling, recursion and GC remain. The unit pays off most where the
+caller is compiled code: there the same node search costs 20-40 cycles of
+branchy binary search (5 dependent compares, mispredictions) against 7-9
+cycles here, of which 2 are compute and the rest the line fetch -- the
+memory-bound regime the textbook analysis assumes.
+
+5.7b The fixed 31-lane design it evolved from (hw/rtl/nsu_top_fixed.sv + nsu_core.sv)
+
+The first version of the unit waits for both lines, holds the 31 keys in
+registers and compares them all in one cycle (nsu_core: 31 lanes -> S1 masks
+-> 31-input adder tree + OR -> S2). It is simpler to reason about and has a
+constant latency, but it waits for a line it often does not need and spends
+31 comparators where 16 do the same work. Both designs are simulated with the
+same testbench conditions (3-cycle L1 latency, ready stalled 1 in 4, all 3,210
+vectors correct; hw/sim_result.txt, hw/sim_result_fixed.txt):
+
+                                   NSU (streaming early-out)   fixed 31-lane design
+  issue -> rd_valid                7..9 cycles, average 7.7    10 (11 with a stall)
+  unit busy per instruction        9.3 (drains a requested line) 10
+  line requests per search         2.00                        2
+  comparators (32-bit < and ==)    16 pairs                    31 pairs
+  key storage                      none (compared on arrival)  31 x 32-bit registers
+  compute after the last needed line   2 cycles (S1 + S2)      2 cycles
+
+Bandwidth is the same: with back-to-back requests and a 3-cycle L1 both
+requests leave before the first line is back. Requesting the second line only
+when needed would cut traffic to ~1.5 lines per search but add the memory
+latency to the 47 % of searches that need it and end up slower on average;
+the current policy trades a little L1 bandwidth for latency. Under CPython the
+2-3 cycle (~1 ns) difference is invisible against the 206 ns call overhead;
+for compiled callers it is a 1.3x lower search latency from a 2x smaller
+comparator array.
+
+5.8 Performance / area / power trade-offs
+
+  block                                             estimate (28 nm)
+  ------------------------------------------------  ---------------------------
+  16 x (32-bit '<' + 32-bit '==')                   ~16 x 180 = ~2.9 k gate-eq.
+  valid mask, popcount-16 adder tree, 5-bit adder,  ~250 gate-eq.
+    OR-16
+  Control: FSM, request / response counters,        ~400 gate-eq.
+    address adder, boundary / last logic
+  flops: rs1 copy 64, rs2 copy 32, count 5,         ~220 flops
+    S1 35, S2 6, rd 65, FSM and counters ~15
+  total                                             ~3.5 k gate-eq. + ~220 flops
+                                                    = ~0.003-0.005 mm2
+  (fixed 31-lane design, for comparison: ~6-7 k gate-eq. + ~1.2 k flops)
+
+  * Frequency vs latency: 2 pipeline stages per line -> 1.5 GHz and above;
+    the instruction latency is dominated by the line fetches (7..9 cycles),
+    not by the compute (2 cycles after the last needed line).
+  * Key width: 32-bit keys fit this benchmark (keys < 200,000) and most
+    indexes; they halve the block and the comparators compared with 64-bit
+    keys. Keys >= 2^32 take the software path. A 64-bit variant is the same
+    design with 8 lanes per line and a 4-line block (7..12 cycles, average
+    8.7, measured on an earlier version of this unit).
+  * Early exit vs bandwidth: both lines are requested up front, so latency is
+    minimal and control stays trivial, at the cost of fetching a line that is
+    then discarded (0.5 of 2 on average). A count-aware or one-at-a-time
+    fetch would save that bandwidth and cost latency; not worth it at this
+    call rate.
+  * Fitted, not configurable: 32-bit keys, 16 lanes = one 64 B line, 32-entry
+    blocks; matches this benchmark exactly (2t-1 = 31 keys, t = 16).
+  * Throughput: one instruction in flight at a time; a second nsrch waits for
+    busy. At the interpreter's ~2 M searches/s the unit is idle > 99.9 % of
+    the time, so no overlap is needed; compiled callers or a future tree-walk
+    unit that chains node searches would want it.
+  * Power: 16 comparators toggle once per arriving line; clock-gated, dynamic
+    power is well under 1 mW at 1 GHz when active, microwatts on average;
+    leakage a few microwatts.
+  * Memory traffic: the node's two lines -- the same lines the CPU would
+    touch; no extra bandwidth.
+
+5.9 Verification
+
+hw/run_hw.sh runs the whole flow; hw/run_sim.sh does the Verilator 5.052 lint
+with -Wall (clean) and the simulation.
+  tb_nsu.sv (the NSU) -- one nsrch per vector against a memory model holding
+    each node block (key count in entry 0, keys in entries 1..31, 32-bit
+    entries, 16 per line; 3-cycle latency, ready stalled 1 in 4 cycles),
+    checking rd_data for 3,210 vectors: 3,000 real (node, query) pairs
+    recorded from the benchmark's own 200k tree during lookups, inserts and
+    deletes (hw/gen_vectors.py); 18 directed corner cases (empty node, one
+    key, full node with the query below/at/above each boundary, 32-bit
+    extremes, count smaller than filled lanes); 192 random nodes covering
+    every count 0..31. It also records the latency histogram, the busy time
+    and the requests issued per instruction.
+  tb_nsu_fixed.sv (reference design) -- phase A: the same per-instruction
+    check on nsu_top_fixed; phase B: nsu_core fed back-to-back, one vector per
+    cycle, checked at the 2-cycle latency.
+  Expected values from hw/model/nsu_model.py (bit-exact model), itself
+  checked against bisect_left on every vector.
+Result: hw/sim_result.txt -- PASS: all 3210 vectors correct; 7..9 cycles,
+average 7.7. hw/sim_result_fixed.txt -- PASS, 10-11 cycles.
+
+Not done (as permitted by the assignment): synthesis, place-and-route, FPGA
+or silicon test. The area/frequency/power figures are analytic estimates.
+
+
+--------------------------------------------------------------------------------
+6. CONCLUSION
+--------------------------------------------------------------------------------
+
+The btree benchmark is a CLRS B-tree in pure Python whose docstring promises a
+garbage-collector workload, but measurement shows GC at ~11 % of the loop and a
+single method, the linear key scan inside each node, at ~50 %. Hardware
+counters (IPC 1.44, 2 % L1 miss rate) show the program is instruction-bound:
+under an interpreter the "cheap" in-node comparisons of B-tree theory cost
+~310 cycles each, more than the node fetch they were meant to amortise.
+
+Replacing that scan with a C binary search over a parallel plain-int key list
+-- 27 added and 6 removed lines, the workload and the object graph unchanged,
+equivalence proven node by node -- brings one loop from 3.11 s to 1.94 s in
+the course VM, 1.60x faster (-37.6 %; 1.59x back to back; 1.65x on the
+bare-metal cross-check host), against the 7 % the
+assignment requires. The hotspot
+falls from ~50 % to 12 % of the loop, and what remains of it is the cost of a
+Python method call.
+
+The same operation defines the proposed accelerator: a Node Search Unit
+exposed as one instruction (nsrch rd, rs1 = node address, rs2 = query) that
+reads the node block (32-bit keys, two cache lines) from the L1 D-cache,
+compares each 64-byte line of 16 keys as it arrives, accumulates the position
+as a running popcount and stops at the first line that contains a key >=
+query. It is implemented in SystemVerilog and verified against 3,210 vectors
+from the real tree, next to the fixed 31-lane design it evolved from. The unit
+is small (~3.5 k gates, ~220 flops), fast (7-9 cycles issue to writeback,
+average 7.7), generic, and
+honest about its limits: behind CPython it can lift the loop to ~1.7x at best
+because the rest of the interpreter work remains; its natural home is compiled
+code, where the node search becomes memory-bound as a B-tree should be.
+
+
+--------------------------------------------------------------------------------
+APPENDIX A. FILES AND HOW TO REPRODUCE
+--------------------------------------------------------------------------------
+
+Repository layout (follows "What You Need to Submit" in Project.pdf):
+
+  report_btree.txt             this report                              (1. report)
+  script_btree.sh              setup | benchmark | flamegraph | compare | all   (2. script)
+  prompt.txt                   AI-tool prompt log                       (4. prompts)
+  README.md                    structure and how to run
+  Hw__Additional_Files/       everything below lives in this folder    (3. HW + additional)
+  benchmark/original/bm_btree/     BEFORE: pyperformance 1.14.0 benchmark, code verbatim (+ MANIFEST;
+                                   pyproject.toml carries an explicit version so the copy runs via --manifest)
+  benchmark/optimized/bm_btree/    AFTER: same file with get_position_opt; MANIFEST
+  benchmark/btree_optimization.diff
+  results/                     measured in the course VM (the numbers of this report):
+    baseline/                  btree_baseline_*.json + logs, analysis_btree_release.txt,
+                               microbench_search_release.txt, perf_stat_btree_rel.txt,
+                               perf_stat_l2_btree_rel.txt, perf_phase_counters_release.txt,
+                               memory_footprint_release.txt
+    optimized/                 btree_opt_*.json + logs, compare_default.txt,
+                               compare_rigorous.txt, RESULTS.md
+    flamegraphs/               baseline_release_*, baseline_debug_*, optimized_release_*,
+                               optimized_debug_*: _python.svg (readable, debug builds),
+                               _full.svg, .folded, .summary.txt, .perf_report*.txt;
+                               timing_back_to_back.txt; README.md
+    host_bare_metal/           the same three folders from the bare-metal cross-check
+                               host (naranja13, CPython 3.12.3): the source of the LLC
+                               counters and of the frame-pointer release profiles;
+                               BASELINE_FINDINGS.md is the analysis log of that run
+  hw/                          rtl/ (nsu_top.sv = the NSU; nsu_top_fixed.sv + nsu_core.sv), tb/,
+                               model/, sw/, vectors/, gen_vectors.py, run_hw.sh, run_sim.sh,
+                               sim_result*.txt, NSU_DESIGN.md, make_block_diagram.py,
+                               block_diagram_system.svg / .png, node_structure_spec.md,
+                               node_memory_breakdown.py (getsizeof of one real node),
+                               node_memory_breakdown.txt
+  scripts/                     profile_btree.py, analyze_btree.py, microbench_search.py,
+                               memory_footprint.py (RSS + getsizeof working set),
+                               phase_counters.py (hardware counters per phase of the loop),
+                               folded_summary.py, make_flamegraph_py.py, make_optimized.py
+  tests/test_btree_equivalence.py
+  docs/                        results_table_for_slides.md, slide_solution_narrative.md,
+                               SUBMISSION_CHECKLIST.md
+  tools/                       created by the scripts (FlameGraph clone, Verilator build);
+                               not part of the repository
+
+  Reproduce (run from the repository root; the script changes into
+  "Hw__Additional_Files/"; virtual environments are created at the root by
+  `setup`, or used from one level up if they already exist there):
+    ./script_btree.sh setup       # 1. environment setup and dependency installation:
+                                  #    .venv (release), .venv_dbg (python3-dbg), pyperformance, FlameGraph
+    ./script_btree.sh benchmark   # 2. benchmark execution: pyperformance run, 10-process reference run,
+                                  #    per-phase analysis, in-node search micro-benchmark
+    ./script_btree.sh flamegraph  # 3. flame graph and performance data generation: perf stat counters,
+                                  #    perf record + flame graphs (release and debug interpreter)
+    ./script_btree.sh compare     # 4. post-optimization execution with comparison: generate the optimized
+                                  #    copy, equivalence test, pyperformance via manifest, 10-process run,
+                                  #    pyperf compare_to, flame graph, back-to-back timing
+    ./script_btree.sh             # all four stages in order
+
+  results/ holds the measurement files this report quotes, produced by this
+  script inside the course VM. Re-running the stages overwrites them; in the
+  VM the numbers return within about 2 % (run-to-run noise), so the
+  conclusions hold but a fresh run will not match the quoted values digit for
+  digit. On another machine the absolute times move with the interpreter build
+  and the CPU (the bare-metal cross-check is 1.6x slower per loop); the ratios
+  do not.
+
+  Hardware flow (separate from the benchmark script):
+    Hw__Additional_Files/hw/run_hw.sh   # model check, NSU vectors from the real tree, block diagram,
+                                        # Verilator build if needed, lint + simulation (both variants)
+
+
+--------------------------------------------------------------------------------
+APPENDIX B. MEASUREMENT NOTES (perf on this host)
+--------------------------------------------------------------------------------
+
+  * Inside the course VM (KVM, `-cpu host`): the guest gets a PMU with the
+    core events; `perf record -e cycles:u` and the L1/L2 cache events work, the
+    LLC events are <not supported>, and `perf stat -e cycles:u` reads 0 while
+    the same event opened with perf_event_open from inside the process counts
+    correctly (results/baseline/perf_phase_counters_release.txt is the source
+    of cycles and IPC there). The script runs as root in the VM, so
+    perf_event_paranoid does not apply.
+  * The VM's release interpreter (deadsnakes 3.12.15) has no frame pointers, so
+    perf's frame-pointer unwinding stops at the interpreter loop: Python-level
+    flame graphs in the VM come from python3.12-dbg (the course-guide method).
+    DWARF unwinding was tried and is unusably slow on a 1-vCPU guest.
+  * kernel.perf_event_max_sample_rate = 1 on naranja13 (bare-metal cross-check)
+    and no sudo: `perf
+    record -F 999` is silently clamped to 1 Hz (the first profile had 120
+    samples over a 2-minute run). Fixed-period sampling (`-c 2000000`, ~1.2 kHz
+    at 2.4 GHz) is not clamped and was used throughout.
+  * kernel.perf_event_paranoid = 2: user-space samples only (cycles:u).
+  * Ubuntu's /usr/bin/perf is a kernel-version wrapper that refuses to run when
+    no matching linux-tools package exists; script_btree.sh therefore probes
+    for a working binary (PERF env var, /usr/local/{sbin,bin}/perf, then the
+    newest /usr/lib/linux-tools-*/perf) and skips the recordings with a notice
+    if none works. The 6.8 tools perf records correctly on the 6.18 kernel.
+  * perf was built without DWARF unwinding; Ubuntu's python3.12 keeps frame
+    pointers, so `-g` (frame-pointer call graphs) works on the release build.
+  * `python -X perf` (CPython 3.12) writes /tmp/perf-<pid>.map so Python
+    functions appear as py::Class.method frames.
+  * pyperformance/pyperf sanitise the worker environment and spawn
+    sub-processes; scripts/profile_btree.py runs the unmodified benchmark
+    module in-process so perf attaches to exactly the timed code.
+  * Running a benchmark from a custom manifest requires an explicit `version`
+    in its pyproject.toml (the installed copy uses dynamic = ["version"],
+    which pyperformance cannot resolve outside its own tree).
+  * Debug-build profiles rank the same functions but add debug-only cost
+    (validate_list 7 %, refcount-total bookkeeping, debug allocator); timing
+    and speed-ups were always measured on the release interpreter.

@@ -1,0 +1,2320 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 22K of event 'cycles:u'
+# Event count (approx.): 44322000000
+#
+# Overhead  Symbol                                                                                                                     IPC   [IPC Coverage]
+# ........  .........................................................................................................................  ....................
+#
+    27.36%  [.] _PyEval_EvalFrameDefault                                                                                               -      -            
+            |          
+            |--6.48%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          |          
+            |          |--4.78%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          _PyEval_Vector
+            |          |          _PyFunction_Vectorcall
+            |          |          _PyObject_VectorcallTstate.lto_priv.2
+            |          |          PyObject_Vectorcall
+            |          |          _PyEval_EvalFrameDefault
+            |          |          |          
+            |          |          |--3.19%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |          _PyEval_Vector
+            |          |          |          _PyFunction_Vectorcall
+            |          |          |          _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |          PyObject_Vectorcall
+            |          |          |          _PyEval_EvalFrameDefault
+            |          |          |          |          
+            |          |          |          |--1.74%--py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |          |          _PyEval_Vector
+            |          |          |          |          _PyFunction_Vectorcall
+            |          |          |          |          _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |          |          PyObject_Vectorcall
+            |          |          |          |          _PyEval_EvalFrameDefault
+            |          |          |          |          py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |          |          _PyEval_Vector
+            |          |          |          |          _PyFunction_Vectorcall
+            |          |          |          |          _PyObject_VectorcallTstate.lto_priv.6
+            |          |          |          |          vectorcall_method.lto_priv.0
+            |          |          |          |          slot_mp_ass_subscript.lto_priv.0
+            |          |          |          |          PyObject_SetItem
+            |          |          |          |          _PyEval_EvalFrameDefault
+            |          |          |          |          py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |          |          _PyEval_Vector
+            |          |          |          |          _PyFunction_Vectorcall
+            |          |          |          |          _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |          |          PyObject_Vectorcall
+            |          |          |          |          _PyEval_EvalFrameDefault
+            |          |          |          |          py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |          |          _PyEval_Vector
+            |          |          |          |          _PyFunction_Vectorcall
+            |          |          |          |          _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |          |          PyObject_Vectorcall
+            |          |          |          |          _PyEval_EvalFrameDefault
+            |          |          |          |          py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |          |          _PyEval_Vector
+            |          |          |          |          _PyFunction_Vectorcall
+            |          |          |          |          _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |          |          PyObject_Vectorcall
+            |          |          |          |          _PyEval_EvalFrameDefault
+            |          |          |          |          py::main:./scripts/profile_btree.py
+            |          |          |          |          _PyEval_Vector
+            |          |          |          |          _PyFunction_Vectorcall
+            |          |          |          |          _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |          |          PyObject_Vectorcall
+            |          |          |          |          _PyEval_EvalFrameDefault
+            |          |          |          |          py::<module>:./scripts/profile_btree.py
+            |          |          |          |          _PyEval_Vector
+            |          |          |          |          PyEval_EvalCode
+            |          |          |          |          run_eval_code_obj
+            |          |          |          |          run_mod
+            |          |          |          |          pyrun_file
+            |          |          |          |          _PyRun_SimpleFileObject
+            |          |          |          |          _PyRun_AnyFileObject
+            |          |          |          |          pymain_run_file_obj
+            |          |          |          |          pymain_run_file
+            |          |          |          |          pymain_run_python
+            |          |          |          |          Py_RunMain
+            |          |          |          |          pymain_main
+            |          |          |          |          Py_BytesMain
+            |          |          |          |          main
+            |          |          |          |          __libc_start_call_main
+            |          |          |          |          
+            |          |          |           --1.44%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |                     _PyEval_Vector
+            |          |          |                     _PyFunction_Vectorcall
+            |          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |                     PyObject_Vectorcall
+            |          |          |                     _PyEval_EvalFrameDefault
+            |          |          |                     py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |                     _PyEval_Vector
+            |          |          |                     _PyFunction_Vectorcall
+            |          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |                     PyObject_Vectorcall
+            |          |          |                     _PyEval_EvalFrameDefault
+            |          |          |                     py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |                     _PyEval_Vector
+            |          |          |                     _PyFunction_Vectorcall
+            |          |          |                     _PyObject_VectorcallTstate.lto_priv.6
+            |          |          |                     vectorcall_method.lto_priv.0
+            |          |          |                     slot_mp_ass_subscript.lto_priv.0
+            |          |          |                     PyObject_SetItem
+            |          |          |                     _PyEval_EvalFrameDefault
+            |          |          |                     py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |                     _PyEval_Vector
+            |          |          |                     _PyFunction_Vectorcall
+            |          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |                     PyObject_Vectorcall
+            |          |          |                     _PyEval_EvalFrameDefault
+            |          |          |                     py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |                     _PyEval_Vector
+            |          |          |                     _PyFunction_Vectorcall
+            |          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |                     PyObject_Vectorcall
+            |          |          |                     _PyEval_EvalFrameDefault
+            |          |          |                     py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |                     _PyEval_Vector
+            |          |          |                     _PyFunction_Vectorcall
+            |          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |                     PyObject_Vectorcall
+            |          |          |                     _PyEval_EvalFrameDefault
+            |          |          |                     py::main:./scripts/profile_btree.py
+            |          |          |                     _PyEval_Vector
+            |          |          |                     _PyFunction_Vectorcall
+            |          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |                     PyObject_Vectorcall
+            |          |          |                     _PyEval_EvalFrameDefault
+            |          |          |                     py::<module>:./scripts/profile_btree.py
+            |          |          |                     _PyEval_Vector
+            |          |          |                     PyEval_EvalCode
+            |          |          |                     run_eval_code_obj
+            |          |          |                     run_mod
+            |          |          |                     pyrun_file
+            |          |          |                     _PyRun_SimpleFileObject
+            |          |          |                     _PyRun_AnyFileObject
+            |          |          |                     pymain_run_file_obj
+            |          |          |                     pymain_run_file
+            |          |          |                     pymain_run_python
+            |          |          |                     Py_RunMain
+            |          |          |                     pymain_main
+            |          |          |                     Py_BytesMain
+            |          |          |                     main
+            |          |          |                     __libc_start_call_main
+            |          |          |          
+            |          |           --1.59%--py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |                     _PyEval_Vector
+            |          |                     _PyFunction_Vectorcall
+            |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |                     PyObject_Vectorcall
+            |          |                     _PyEval_EvalFrameDefault
+            |          |                     py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |                     _PyEval_Vector
+            |          |                     _PyFunction_Vectorcall
+            |          |                     _PyObject_VectorcallTstate.lto_priv.6
+            |          |                     vectorcall_method.lto_priv.0
+            |          |                     slot_mp_ass_subscript.lto_priv.0
+            |          |                     PyObject_SetItem
+            |          |                     _PyEval_EvalFrameDefault
+            |          |                     py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |                     _PyEval_Vector
+            |          |                     _PyFunction_Vectorcall
+            |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |                     PyObject_Vectorcall
+            |          |                     _PyEval_EvalFrameDefault
+            |          |                     py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |                     _PyEval_Vector
+            |          |                     _PyFunction_Vectorcall
+            |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |                     PyObject_Vectorcall
+            |          |                     _PyEval_EvalFrameDefault
+            |          |                     py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |                     _PyEval_Vector
+            |          |                     _PyFunction_Vectorcall
+            |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |                     PyObject_Vectorcall
+            |          |                     _PyEval_EvalFrameDefault
+            |          |                     py::main:./scripts/profile_btree.py
+            |          |                     _PyEval_Vector
+            |          |                     _PyFunction_Vectorcall
+            |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |                     PyObject_Vectorcall
+            |          |                     _PyEval_EvalFrameDefault
+            |          |                     py::<module>:./scripts/profile_btree.py
+            |          |                     _PyEval_Vector
+            |          |                     PyEval_EvalCode
+            |          |                     run_eval_code_obj
+            |          |                     run_mod
+            |          |                     pyrun_file
+            |          |                     _PyRun_SimpleFileObject
+            |          |                     _PyRun_AnyFileObject
+            |          |                     pymain_run_file_obj
+            |          |                     pymain_run_file
+            |          |                     pymain_run_python
+            |          |                     Py_RunMain
+            |          |                     pymain_main
+            |          |                     Py_BytesMain
+            |          |                     main
+            |          |                     __libc_start_call_main
+            |          |          
+            |           --1.71%--py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     _PyEval_Vector
+            |                     _PyFunction_Vectorcall
+            |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     PyObject_Vectorcall
+            |                     _PyEval_EvalFrameDefault
+            |                     py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     _PyEval_Vector
+            |                     _PyFunction_Vectorcall
+            |                     _PyObject_VectorcallTstate.lto_priv.6
+            |                     vectorcall_method.lto_priv.0
+            |                     slot_mp_ass_subscript.lto_priv.0
+            |                     PyObject_SetItem
+            |                     _PyEval_EvalFrameDefault
+            |                     py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     _PyEval_Vector
+            |                     _PyFunction_Vectorcall
+            |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     PyObject_Vectorcall
+            |                     _PyEval_EvalFrameDefault
+            |                     py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     _PyEval_Vector
+            |                     _PyFunction_Vectorcall
+            |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     PyObject_Vectorcall
+            |                     _PyEval_EvalFrameDefault
+            |                     py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     _PyEval_Vector
+            |                     _PyFunction_Vectorcall
+            |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     PyObject_Vectorcall
+            |                     _PyEval_EvalFrameDefault
+            |                     py::main:./scripts/profile_btree.py
+            |                     _PyEval_Vector
+            |                     _PyFunction_Vectorcall
+            |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     PyObject_Vectorcall
+            |                     _PyEval_EvalFrameDefault
+            |                     py::<module>:./scripts/profile_btree.py
+            |                     _PyEval_Vector
+            |                     PyEval_EvalCode
+            |                     run_eval_code_obj
+            |                     run_mod
+            |                     pyrun_file
+            |                     _PyRun_SimpleFileObject
+            |                     _PyRun_AnyFileObject
+            |                     pymain_run_file_obj
+            |                     pymain_run_file
+            |                     pymain_run_python
+            |                     Py_RunMain
+            |                     pymain_main
+            |                     Py_BytesMain
+            |                     main
+            |                     __libc_start_call_main
+            |          
+            |--3.62%--py::BNode.search:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          |          
+            |          |--2.55%--py::BNode.search:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          _PyEval_Vector
+            |          |          _PyFunction_Vectorcall
+            |          |          _PyObject_VectorcallTstate.lto_priv.2
+            |          |          PyObject_Vectorcall
+            |          |          _PyEval_EvalFrameDefault
+            |          |          |          
+            |          |          |--1.62%--py::BNode.search:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |          _PyEval_Vector
+            |          |          |          _PyFunction_Vectorcall
+            |          |          |          _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |          PyObject_Vectorcall
+            |          |          |          _PyEval_EvalFrameDefault
+            |          |          |          |          
+            |          |          |          |--0.93%--py::BTree.__getitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |          |          _PyEval_Vector
+            |          |          |          |          _PyFunction_Vectorcall
+            |          |          |          |          _PyObject_VectorcallTstate.lto_priv.6
+            |          |          |          |          vectorcall_method.lto_priv.0
+            |          |          |          |          slot_mp_subscript.lto_priv.0
+            |          |          |          |          PyObject_GetItem
+            |          |          |          |          _PyEval_EvalFrameDefault
+            |          |          |          |          |          
+            |          |          |          |           --0.88%--py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |          |                     _PyEval_Vector
+            |          |          |          |                     _PyFunction_Vectorcall
+            |          |          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |          |                     PyObject_Vectorcall
+            |          |          |          |                     _PyEval_EvalFrameDefault
+            |          |          |          |                     py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |          |                     _PyEval_Vector
+            |          |          |          |                     _PyFunction_Vectorcall
+            |          |          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |          |                     PyObject_Vectorcall
+            |          |          |          |                     _PyEval_EvalFrameDefault
+            |          |          |          |                     py::main:./scripts/profile_btree.py
+            |          |          |          |                     _PyEval_Vector
+            |          |          |          |                     _PyFunction_Vectorcall
+            |          |          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |          |                     PyObject_Vectorcall
+            |          |          |          |                     _PyEval_EvalFrameDefault
+            |          |          |          |                     py::<module>:./scripts/profile_btree.py
+            |          |          |          |                     _PyEval_Vector
+            |          |          |          |                     PyEval_EvalCode
+            |          |          |          |                     run_eval_code_obj
+            |          |          |          |                     run_mod
+            |          |          |          |                     pyrun_file
+            |          |          |          |                     _PyRun_SimpleFileObject
+            |          |          |          |                     _PyRun_AnyFileObject
+            |          |          |          |                     pymain_run_file_obj
+            |          |          |          |                     pymain_run_file
+            |          |          |          |                     pymain_run_python
+            |          |          |          |                     Py_RunMain
+            |          |          |          |                     pymain_main
+            |          |          |          |                     Py_BytesMain
+            |          |          |          |                     main
+            |          |          |          |                     __libc_start_call_main
+            |          |          |          |          
+            |          |          |           --0.69%--py::BNode.search:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |                     _PyEval_Vector
+            |          |          |                     _PyFunction_Vectorcall
+            |          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |                     PyObject_Vectorcall
+            |          |          |                     _PyEval_EvalFrameDefault
+            |          |          |                     py::BTree.__getitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |                     _PyEval_Vector
+            |          |          |                     _PyFunction_Vectorcall
+            |          |          |                     _PyObject_VectorcallTstate.lto_priv.6
+            |          |          |                     vectorcall_method.lto_priv.0
+            |          |          |                     slot_mp_subscript.lto_priv.0
+            |          |          |                     PyObject_GetItem
+            |          |          |                     _PyEval_EvalFrameDefault
+            |          |          |                     |          
+            |          |          |                      --0.65%--py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |                                _PyEval_Vector
+            |          |          |                                _PyFunction_Vectorcall
+            |          |          |                                _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |                                PyObject_Vectorcall
+            |          |          |                                _PyEval_EvalFrameDefault
+            |          |          |                                py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          |                                _PyEval_Vector
+            |          |          |                                _PyFunction_Vectorcall
+            |          |          |                                _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |                                PyObject_Vectorcall
+            |          |          |                                _PyEval_EvalFrameDefault
+            |          |          |                                py::main:./scripts/profile_btree.py
+            |          |          |                                _PyEval_Vector
+            |          |          |                                _PyFunction_Vectorcall
+            |          |          |                                _PyObject_VectorcallTstate.lto_priv.2
+            |          |          |                                PyObject_Vectorcall
+            |          |          |                                _PyEval_EvalFrameDefault
+            |          |          |                                py::<module>:./scripts/profile_btree.py
+            |          |          |                                _PyEval_Vector
+            |          |          |                                PyEval_EvalCode
+            |          |          |                                run_eval_code_obj
+            |          |          |                                run_mod
+            |          |          |                                pyrun_file
+            |          |          |                                _PyRun_SimpleFileObject
+            |          |          |                                _PyRun_AnyFileObject
+            |          |          |                                pymain_run_file_obj
+            |          |          |                                pymain_run_file
+            |          |          |                                pymain_run_python
+            |          |          |                                Py_RunMain
+            |          |          |                                pymain_main
+            |          |          |                                Py_BytesMain
+            |          |          |                                main
+            |          |          |                                __libc_start_call_main
+            |          |          |          
+            |          |           --0.93%--py::BTree.__getitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |                     _PyEval_Vector
+            |          |                     _PyFunction_Vectorcall
+            |          |                     _PyObject_VectorcallTstate.lto_priv.6
+            |          |                     vectorcall_method.lto_priv.0
+            |          |                     slot_mp_subscript.lto_priv.0
+            |          |                     PyObject_GetItem
+            |          |                     _PyEval_EvalFrameDefault
+            |          |                     |          
+            |          |                      --0.86%--py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |                                _PyEval_Vector
+            |          |                                _PyFunction_Vectorcall
+            |          |                                _PyObject_VectorcallTstate.lto_priv.2
+            |          |                                PyObject_Vectorcall
+            |          |                                _PyEval_EvalFrameDefault
+            |          |                                py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |                                _PyEval_Vector
+            |          |                                _PyFunction_Vectorcall
+            |          |                                _PyObject_VectorcallTstate.lto_priv.2
+            |          |                                PyObject_Vectorcall
+            |          |                                _PyEval_EvalFrameDefault
+            |          |                                py::main:./scripts/profile_btree.py
+            |          |                                _PyEval_Vector
+            |          |                                _PyFunction_Vectorcall
+            |          |                                _PyObject_VectorcallTstate.lto_priv.2
+            |          |                                PyObject_Vectorcall
+            |          |                                _PyEval_EvalFrameDefault
+            |          |                                py::<module>:./scripts/profile_btree.py
+            |          |                                _PyEval_Vector
+            |          |                                PyEval_EvalCode
+            |          |                                run_eval_code_obj
+            |          |                                run_mod
+            |          |                                pyrun_file
+            |          |                                _PyRun_SimpleFileObject
+            |          |                                _PyRun_AnyFileObject
+            |          |                                pymain_run_file_obj
+            |          |                                pymain_run_file
+            |          |                                pymain_run_python
+            |          |                                Py_RunMain
+            |          |                                pymain_main
+            |          |                                Py_BytesMain
+            |          |                                main
+            |          |                                __libc_start_call_main
+            |          |          
+            |           --1.07%--py::BTree.__getitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     _PyEval_Vector
+            |                     _PyFunction_Vectorcall
+            |                     _PyObject_VectorcallTstate.lto_priv.6
+            |                     vectorcall_method.lto_priv.0
+            |                     slot_mp_subscript.lto_priv.0
+            |                     PyObject_GetItem
+            |                     _PyEval_EvalFrameDefault
+            |                     |          
+            |                      --1.02%--py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::main:./scripts/profile_btree.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::<module>:./scripts/profile_btree.py
+            |                                _PyEval_Vector
+            |                                PyEval_EvalCode
+            |                                run_eval_code_obj
+            |                                run_mod
+            |                                pyrun_file
+            |                                _PyRun_SimpleFileObject
+            |                                _PyRun_AnyFileObject
+            |                                pymain_run_file_obj
+            |                                pymain_run_file
+            |                                pymain_run_python
+            |                                Py_RunMain
+            |                                pymain_main
+            |                                Py_BytesMain
+            |                                main
+            |                                __libc_start_call_main
+            |          
+            |--3.19%--py::BNode.is_full:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          |          
+            |           --2.78%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     _PyEval_Vector
+            |                     _PyFunction_Vectorcall
+            |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     PyObject_Vectorcall
+            |                     _PyEval_EvalFrameDefault
+            |                     |          
+            |                     |--1.98%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     |          _PyEval_Vector
+            |                     |          _PyFunction_Vectorcall
+            |                     |          _PyObject_VectorcallTstate.lto_priv.2
+            |                     |          PyObject_Vectorcall
+            |                     |          _PyEval_EvalFrameDefault
+            |                     |          |          
+            |                     |          |--1.17%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     |          |          _PyEval_Vector
+            |                     |          |          _PyFunction_Vectorcall
+            |                     |          |          _PyObject_VectorcallTstate.lto_priv.2
+            |                     |          |          PyObject_Vectorcall
+            |                     |          |          _PyEval_EvalFrameDefault
+            |                     |          |          |          
+            |                     |          |           --0.78%--py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     |          |                     _PyEval_Vector
+            |                     |          |                     _PyFunction_Vectorcall
+            |                     |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     |          |                     PyObject_Vectorcall
+            |                     |          |                     _PyEval_EvalFrameDefault
+            |                     |          |                     py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     |          |                     _PyEval_Vector
+            |                     |          |                     _PyFunction_Vectorcall
+            |                     |          |                     _PyObject_VectorcallTstate.lto_priv.6
+            |                     |          |                     vectorcall_method.lto_priv.0
+            |                     |          |                     slot_mp_ass_subscript.lto_priv.0
+            |                     |          |                     PyObject_SetItem
+            |                     |          |                     _PyEval_EvalFrameDefault
+            |                     |          |                     py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     |          |                     _PyEval_Vector
+            |                     |          |                     _PyFunction_Vectorcall
+            |                     |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     |          |                     PyObject_Vectorcall
+            |                     |          |                     _PyEval_EvalFrameDefault
+            |                     |          |                     py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     |          |                     _PyEval_Vector
+            |                     |          |                     _PyFunction_Vectorcall
+            |                     |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     |          |                     PyObject_Vectorcall
+            |                     |          |                     _PyEval_EvalFrameDefault
+            |                     |          |                     py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     |          |                     _PyEval_Vector
+            |                     |          |                     _PyFunction_Vectorcall
+            |                     |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     |          |                     PyObject_Vectorcall
+            |                     |          |                     _PyEval_EvalFrameDefault
+            |                     |          |                     py::main:./scripts/profile_btree.py
+            |                     |          |                     _PyEval_Vector
+            |                     |          |                     _PyFunction_Vectorcall
+            |                     |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     |          |                     PyObject_Vectorcall
+            |                     |          |                     _PyEval_EvalFrameDefault
+            |                     |          |                     py::<module>:./scripts/profile_btree.py
+            |                     |          |                     _PyEval_Vector
+            |                     |          |                     PyEval_EvalCode
+            |                     |          |                     run_eval_code_obj
+            |                     |          |                     run_mod
+            |                     |          |                     pyrun_file
+            |                     |          |                     _PyRun_SimpleFileObject
+            |                     |          |                     _PyRun_AnyFileObject
+            |                     |          |                     pymain_run_file_obj
+            |                     |          |                     pymain_run_file
+            |                     |          |                     pymain_run_python
+            |                     |          |                     Py_RunMain
+            |                     |          |                     pymain_main
+            |                     |          |                     Py_BytesMain
+            |                     |          |                     main
+            |                     |          |                     __libc_start_call_main
+            |                     |          |          
+            |                     |           --0.81%--py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     |                     _PyEval_Vector
+            |                     |                     _PyFunction_Vectorcall
+            |                     |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     |                     PyObject_Vectorcall
+            |                     |                     _PyEval_EvalFrameDefault
+            |                     |                     py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     |                     _PyEval_Vector
+            |                     |                     _PyFunction_Vectorcall
+            |                     |                     _PyObject_VectorcallTstate.lto_priv.6
+            |                     |                     vectorcall_method.lto_priv.0
+            |                     |                     slot_mp_ass_subscript.lto_priv.0
+            |                     |                     PyObject_SetItem
+            |                     |                     _PyEval_EvalFrameDefault
+            |                     |                     py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     |                     _PyEval_Vector
+            |                     |                     _PyFunction_Vectorcall
+            |                     |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     |                     PyObject_Vectorcall
+            |                     |                     _PyEval_EvalFrameDefault
+            |                     |                     py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     |                     _PyEval_Vector
+            |                     |                     _PyFunction_Vectorcall
+            |                     |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     |                     PyObject_Vectorcall
+            |                     |                     _PyEval_EvalFrameDefault
+            |                     |                     py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     |                     _PyEval_Vector
+            |                     |                     _PyFunction_Vectorcall
+            |                     |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     |                     PyObject_Vectorcall
+            |                     |                     _PyEval_EvalFrameDefault
+            |                     |                     py::main:./scripts/profile_btree.py
+            |                     |                     _PyEval_Vector
+            |                     |                     _PyFunction_Vectorcall
+            |                     |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     |                     PyObject_Vectorcall
+            |                     |                     _PyEval_EvalFrameDefault
+            |                     |                     py::<module>:./scripts/profile_btree.py
+            |                     |                     _PyEval_Vector
+            |                     |                     PyEval_EvalCode
+            |                     |                     run_eval_code_obj
+            |                     |                     run_mod
+            |                     |                     pyrun_file
+            |                     |                     _PyRun_SimpleFileObject
+            |                     |                     _PyRun_AnyFileObject
+            |                     |                     pymain_run_file_obj
+            |                     |                     pymain_run_file
+            |                     |                     pymain_run_python
+            |                     |                     Py_RunMain
+            |                     |                     pymain_main
+            |                     |                     Py_BytesMain
+            |                     |                     main
+            |                     |                     __libc_start_call_main
+            |                     |          
+            |                      --0.80%--py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.6
+            |                                vectorcall_method.lto_priv.0
+            |                                slot_mp_ass_subscript.lto_priv.0
+            |                                PyObject_SetItem
+            |                                _PyEval_EvalFrameDefault
+            |                                py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::main:./scripts/profile_btree.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::<module>:./scripts/profile_btree.py
+            |                                _PyEval_Vector
+            |                                PyEval_EvalCode
+            |                                run_eval_code_obj
+            |                                run_mod
+            |                                pyrun_file
+            |                                _PyRun_SimpleFileObject
+            |                                _PyRun_AnyFileObject
+            |                                pymain_run_file_obj
+            |                                pymain_run_file
+            |                                pymain_run_python
+            |                                Py_RunMain
+            |                                pymain_main
+            |                                Py_BytesMain
+            |                                main
+            |                                __libc_start_call_main
+            |          
+            |--2.55%--py::BNode.get_position_opt:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          |          
+            |          |--1.36%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |          _PyEval_Vector
+            |          |          _PyFunction_Vectorcall
+            |          |          _PyObject_VectorcallTstate.lto_priv.2
+            |          |          PyObject_Vectorcall
+            |          |          _PyEval_EvalFrameDefault
+            |          |          |          
+            |          |           --1.06%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |                     _PyEval_Vector
+            |          |                     _PyFunction_Vectorcall
+            |          |                     _PyObject_VectorcallTstate.lto_priv.2
+            |          |                     PyObject_Vectorcall
+            |          |                     _PyEval_EvalFrameDefault
+            |          |                     |          
+            |          |                      --0.70%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          |                                _PyEval_Vector
+            |          |                                _PyFunction_Vectorcall
+            |          |                                _PyObject_VectorcallTstate.lto_priv.2
+            |          |                                PyObject_Vectorcall
+            |          |                                _PyEval_EvalFrameDefault
+            |          |          
+            |           --0.99%--py::BNode.search:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     _PyEval_Vector
+            |                     _PyFunction_Vectorcall
+            |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     PyObject_Vectorcall
+            |                     _PyEval_EvalFrameDefault
+            |                     |          
+            |                      --0.71%--py::BNode.search:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |          
+            |--1.51%--py::BNode.is_leaf:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          |          
+            |           --0.84%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     _PyEval_Vector
+            |                     _PyFunction_Vectorcall
+            |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     PyObject_Vectorcall
+            |                     _PyEval_EvalFrameDefault
+            |                     |          
+            |                      --0.67%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                |          
+            |                                 --0.52%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                           _PyEval_Vector
+            |                                           _PyFunction_Vectorcall
+            |                                           _PyObject_VectorcallTstate.lto_priv.2
+            |                                           PyObject_Vectorcall
+            |                                           _PyEval_EvalFrameDefault
+            |          
+            |--1.22%--py::BNode.delete:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          |          
+            |           --0.92%--py::BNode.delete:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                     _PyEval_Vector
+            |                     _PyFunction_Vectorcall
+            |                     _PyObject_VectorcallTstate.lto_priv.2
+            |                     PyObject_Vectorcall
+            |                     _PyEval_EvalFrameDefault
+            |                     |          
+            |                      --0.59%--py::BNode.delete:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |          
+            |--1.01%--py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::main:./scripts/profile_btree.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::<module>:./scripts/profile_btree.py
+            |          _PyEval_Vector
+            |          PyEval_EvalCode
+            |          run_eval_code_obj
+            |          run_mod
+            |          pyrun_file
+            |          _PyRun_SimpleFileObject
+            |          _PyRun_AnyFileObject
+            |          pymain_run_file_obj
+            |          pymain_run_file
+            |          pymain_run_python
+            |          Py_RunMain
+            |          pymain_main
+            |          Py_BytesMain
+            |          main
+            |          __libc_start_call_main
+            |          
+            |--0.99%--py::Random._randbelow_with_getrandbits:/usr/lib/python3.12/random.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          
+            |--0.81%--py::make_records:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          gen_send_ex2
+            |          gen_iternext.lto_priv.0
+            |          list_extend.lto_priv.0
+            |          list___init___impl.lto_priv.0
+            |          list_vectorcall.lto_priv.0
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::main:./scripts/profile_btree.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::<module>:./scripts/profile_btree.py
+            |          _PyEval_Vector
+            |          PyEval_EvalCode
+            |          run_eval_code_obj
+            |          run_mod
+            |          pyrun_file
+            |          _PyRun_SimpleFileObject
+            |          _PyRun_AnyFileObject
+            |          pymain_run_file_obj
+            |          pymain_run_file
+            |          pymain_run_python
+            |          Py_RunMain
+            |          pymain_main
+            |          Py_BytesMain
+            |          main
+            |          __libc_start_call_main
+            |          
+            |--0.75%--py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.6
+            |          vectorcall_method.lto_priv.0
+            |          slot_mp_ass_subscript.lto_priv.0
+            |          PyObject_SetItem
+            |          _PyEval_EvalFrameDefault
+            |          py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::main:./scripts/profile_btree.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::<module>:./scripts/profile_btree.py
+            |          _PyEval_Vector
+            |          PyEval_EvalCode
+            |          run_eval_code_obj
+            |          run_mod
+            |          pyrun_file
+            |          _PyRun_SimpleFileObject
+            |          _PyRun_AnyFileObject
+            |          pymain_run_file_obj
+            |          pymain_run_file
+            |          pymain_run_python
+            |          Py_RunMain
+            |          pymain_main
+            |          Py_BytesMain
+            |          main
+            |          __libc_start_call_main
+            |          
+            |--0.58%--py::Random.shuffle:/usr/lib/python3.12/random.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::main:./scripts/profile_btree.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::<module>:./scripts/profile_btree.py
+            |          _PyEval_Vector
+            |          PyEval_EvalCode
+            |          run_eval_code_obj
+            |          run_mod
+            |          pyrun_file
+            |          _PyRun_SimpleFileObject
+            |          _PyRun_AnyFileObject
+            |          pymain_run_file_obj
+            |          pymain_run_file
+            |          pymain_run_python
+            |          Py_RunMain
+            |          pymain_main
+            |          Py_BytesMain
+            |          main
+            |          __libc_start_call_main
+            |          
+            |--0.53%--py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::main:./scripts/profile_btree.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::<module>:./scripts/profile_btree.py
+            |          _PyEval_Vector
+            |          PyEval_EvalCode
+            |          run_eval_code_obj
+            |          run_mod
+            |          pyrun_file
+            |          _PyRun_SimpleFileObject
+            |          _PyRun_AnyFileObject
+            |          pymain_run_file_obj
+            |          pymain_run_file
+            |          pymain_run_python
+            |          Py_RunMain
+            |          pymain_main
+            |          Py_BytesMain
+            |          main
+            |          __libc_start_call_main
+            |          
+            |--0.52%--py::Random.randrange:/usr/lib/python3.12/random.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          py::Random.randint:/usr/lib/python3.12/random.py
+            |          _PyEval_Vector
+            |          _PyFunction_Vectorcall
+            |          _PyObject_VectorcallTstate.lto_priv.2
+            |          PyObject_Vectorcall
+            |          _PyEval_EvalFrameDefault
+            |          
+             --0.51%--py::BTree.__getitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+                       _PyEval_Vector
+                       _PyFunction_Vectorcall
+                       _PyObject_VectorcallTstate.lto_priv.6
+                       vectorcall_method.lto_priv.0
+                       slot_mp_subscript.lto_priv.0
+                       PyObject_GetItem
+                       _PyEval_EvalFrameDefault
+
+    22.29%  [.] validate_list.lto_priv.0                                                                                               -      -            
+            |
+            ---gc_collect_main
+               |          
+                --22.27%--gc_collect_with_callback
+                          |          
+                          |--20.80%--gc_collect_generations
+                          |          _Py_RunGC
+                          |          _Py_HandlePending
+                          |          _PyEval_EvalFrameDefault
+                          |          |          
+                          |          |--16.64%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.6
+                          |          |          vectorcall_method.lto_priv.0
+                          |          |          slot_mp_ass_subscript.lto_priv.0
+                          |          |          PyObject_SetItem
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::main:./scripts/profile_btree.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::<module>:./scripts/profile_btree.py
+                          |          |          _PyEval_Vector
+                          |          |          PyEval_EvalCode
+                          |          |          run_eval_code_obj
+                          |          |          run_mod
+                          |          |          pyrun_file
+                          |          |          _PyRun_SimpleFileObject
+                          |          |          _PyRun_AnyFileObject
+                          |          |          pymain_run_file_obj
+                          |          |          pymain_run_file
+                          |          |          pymain_run_python
+                          |          |          Py_RunMain
+                          |          |          pymain_main
+                          |          |          Py_BytesMain
+                          |          |          main
+                          |          |          __libc_start_call_main
+                          |          |          
+                          |          |--1.40%--py::Random._randbelow_with_getrandbits:/usr/lib/python3.12/random.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::Random.randrange:/usr/lib/python3.12/random.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::Random.randint:/usr/lib/python3.12/random.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::make_records:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          gen_send_ex2
+                          |          |          gen_iternext.lto_priv.0
+                          |          |          list_extend.lto_priv.0
+                          |          |          list___init___impl.lto_priv.0
+                          |          |          list_vectorcall.lto_priv.0
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::main:./scripts/profile_btree.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::<module>:./scripts/profile_btree.py
+                          |          |          _PyEval_Vector
+                          |          |          PyEval_EvalCode
+                          |          |          run_eval_code_obj
+                          |          |          run_mod
+                          |          |          pyrun_file
+                          |          |          _PyRun_SimpleFileObject
+                          |          |          _PyRun_AnyFileObject
+                          |          |          pymain_run_file_obj
+                          |          |          pymain_run_file
+                          |          |          pymain_run_python
+                          |          |          Py_RunMain
+                          |          |          pymain_main
+                          |          |          Py_BytesMain
+                          |          |          main
+                          |          |          __libc_start_call_main
+                          |          |          
+                          |          |--1.26%--py::BNode.__init__:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_FastCallDictTstate
+                          |          |          _PyObject_Call_Prepend
+                          |          |          slot_tp_init
+                          |          |          type_call.lto_priv.0
+                          |          |          _PyObject_MakeTpCall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::BNode.split_child:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          |          
+                          |          |           --0.95%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |                     _PyEval_Vector
+                          |          |                     _PyFunction_Vectorcall
+                          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+                          |          |                     PyObject_Vectorcall
+                          |          |                     _PyEval_EvalFrameDefault
+                          |          |                     py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |                     _PyEval_Vector
+                          |          |                     _PyFunction_Vectorcall
+                          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+                          |          |                     PyObject_Vectorcall
+                          |          |                     _PyEval_EvalFrameDefault
+                          |          |                     py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |                     _PyEval_Vector
+                          |          |                     _PyFunction_Vectorcall
+                          |          |                     _PyObject_VectorcallTstate.lto_priv.6
+                          |          |                     vectorcall_method.lto_priv.0
+                          |          |                     slot_mp_ass_subscript.lto_priv.0
+                          |          |                     PyObject_SetItem
+                          |          |                     _PyEval_EvalFrameDefault
+                          |          |                     py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |                     _PyEval_Vector
+                          |          |                     _PyFunction_Vectorcall
+                          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+                          |          |                     PyObject_Vectorcall
+                          |          |                     _PyEval_EvalFrameDefault
+                          |          |                     py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |                     _PyEval_Vector
+                          |          |                     _PyFunction_Vectorcall
+                          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+                          |          |                     PyObject_Vectorcall
+                          |          |                     _PyEval_EvalFrameDefault
+                          |          |                     py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |                     _PyEval_Vector
+                          |          |                     _PyFunction_Vectorcall
+                          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+                          |          |                     PyObject_Vectorcall
+                          |          |                     _PyEval_EvalFrameDefault
+                          |          |                     py::main:./scripts/profile_btree.py
+                          |          |                     _PyEval_Vector
+                          |          |                     _PyFunction_Vectorcall
+                          |          |                     _PyObject_VectorcallTstate.lto_priv.2
+                          |          |                     PyObject_Vectorcall
+                          |          |                     _PyEval_EvalFrameDefault
+                          |          |                     py::<module>:./scripts/profile_btree.py
+                          |          |                     _PyEval_Vector
+                          |          |                     PyEval_EvalCode
+                          |          |                     run_eval_code_obj
+                          |          |                     run_mod
+                          |          |                     pyrun_file
+                          |          |                     _PyRun_SimpleFileObject
+                          |          |                     _PyRun_AnyFileObject
+                          |          |                     pymain_run_file_obj
+                          |          |                     pymain_run_file
+                          |          |                     pymain_run_python
+                          |          |                     Py_RunMain
+                          |          |                     pymain_main
+                          |          |                     Py_BytesMain
+                          |          |                     main
+                          |          |                     __libc_start_call_main
+                          |          |          
+                          |          |--0.77%--py::BNode.is_leaf:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::BNode.split_child:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.6
+                          |          |          vectorcall_method.lto_priv.0
+                          |          |          slot_mp_ass_subscript.lto_priv.0
+                          |          |          PyObject_SetItem
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::main:./scripts/profile_btree.py
+                          |          |          _PyEval_Vector
+                          |          |          _PyFunction_Vectorcall
+                          |          |          _PyObject_VectorcallTstate.lto_priv.2
+                          |          |          PyObject_Vectorcall
+                          |          |          _PyEval_EvalFrameDefault
+                          |          |          py::<module>:./scripts/profile_btree.py
+                          |          |          _PyEval_Vector
+                          |          |          PyEval_EvalCode
+                          |          |          run_eval_code_obj
+                          |          |          run_mod
+                          |          |          pyrun_file
+                          |          |          _PyRun_SimpleFileObject
+                          |          |          _PyRun_AnyFileObject
+                          |          |          pymain_run_file_obj
+                          |          |          pymain_run_file
+                          |          |          pymain_run_python
+                          |          |          Py_RunMain
+                          |          |          pymain_main
+                          |          |          Py_BytesMain
+                          |          |          main
+                          |          |          __libc_start_call_main
+                          |          |          
+                          |           --0.69%--py::BNode.split_child:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |                     _PyEval_Vector
+                          |                     _PyFunction_Vectorcall
+                          |                     _PyObject_VectorcallTstate.lto_priv.2
+                          |                     PyObject_Vectorcall
+                          |                     _PyEval_EvalFrameDefault
+                          |                     py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |                     _PyEval_Vector
+                          |                     _PyFunction_Vectorcall
+                          |                     _PyObject_VectorcallTstate.lto_priv.2
+                          |                     PyObject_Vectorcall
+                          |                     _PyEval_EvalFrameDefault
+                          |                     py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |                     _PyEval_Vector
+                          |                     _PyFunction_Vectorcall
+                          |                     _PyObject_VectorcallTstate.lto_priv.2
+                          |                     PyObject_Vectorcall
+                          |                     _PyEval_EvalFrameDefault
+                          |                     |          
+                          |                      --0.57%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |                                _PyEval_Vector
+                          |                                _PyFunction_Vectorcall
+                          |                                _PyObject_VectorcallTstate.lto_priv.2
+                          |                                PyObject_Vectorcall
+                          |                                _PyEval_EvalFrameDefault
+                          |                                py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |                                _PyEval_Vector
+                          |                                _PyFunction_Vectorcall
+                          |                                _PyObject_VectorcallTstate.lto_priv.2
+                          |                                PyObject_Vectorcall
+                          |                                _PyEval_EvalFrameDefault
+                          |                                py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |                                _PyEval_Vector
+                          |                                _PyFunction_Vectorcall
+                          |                                _PyObject_VectorcallTstate.lto_priv.6
+                          |                                vectorcall_method.lto_priv.0
+                          |                                slot_mp_ass_subscript.lto_priv.0
+                          |                                PyObject_SetItem
+                          |                                _PyEval_EvalFrameDefault
+                          |                                py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |                                _PyEval_Vector
+                          |                                _PyFunction_Vectorcall
+                          |                                _PyObject_VectorcallTstate.lto_priv.2
+                          |                                PyObject_Vectorcall
+                          |                                _PyEval_EvalFrameDefault
+                          |                                py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |                                _PyEval_Vector
+                          |                                _PyFunction_Vectorcall
+                          |                                _PyObject_VectorcallTstate.lto_priv.2
+                          |                                PyObject_Vectorcall
+                          |                                _PyEval_EvalFrameDefault
+                          |                                py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+                          |                                _PyEval_Vector
+                          |                                _PyFunction_Vectorcall
+                          |                                _PyObject_VectorcallTstate.lto_priv.2
+                          |                                PyObject_Vectorcall
+                          |                                _PyEval_EvalFrameDefault
+                          |                                py::main:./scripts/profile_btree.py
+                          |                                _PyEval_Vector
+                          |                                _PyFunction_Vectorcall
+                          |                                _PyObject_VectorcallTstate.lto_priv.2
+                          |                                PyObject_Vectorcall
+                          |                                _PyEval_EvalFrameDefault
+                          |                                py::<module>:./scripts/profile_btree.py
+                          |                                _PyEval_Vector
+                          |                                PyEval_EvalCode
+                          |                                run_eval_code_obj
+                          |                                run_mod
+                          |                                pyrun_file
+                          |                                _PyRun_SimpleFileObject
+                          |                                _PyRun_AnyFileObject
+                          |                                pymain_run_file_obj
+                          |                                pymain_run_file
+                          |                                pymain_run_python
+                          |                                Py_RunMain
+                          |                                pymain_main
+                          |                                Py_BytesMain
+                          |                                main
+                          |                                __libc_start_call_main
+                          |          
+                           --1.46%--gc_collect_impl
+                                     gc_collect
+                                     |          
+                                     |--0.74%--cfunction_vectorcall_FASTCALL_KEYWORDS
+                                     |          _PyObject_VectorcallTstate.lto_priv.2
+                                     |          PyObject_Vectorcall
+                                     |          _PyEval_EvalFrameDefault
+                                     |          py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+                                     |          _PyEval_Vector
+                                     |          _PyFunction_Vectorcall
+                                     |          _PyObject_VectorcallTstate.lto_priv.2
+                                     |          PyObject_Vectorcall
+                                     |          _PyEval_EvalFrameDefault
+                                     |          py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+                                     |          _PyEval_Vector
+                                     |          _PyFunction_Vectorcall
+                                     |          _PyObject_VectorcallTstate.lto_priv.2
+                                     |          PyObject_Vectorcall
+                                     |          _PyEval_EvalFrameDefault
+                                     |          py::main:./scripts/profile_btree.py
+                                     |          _PyEval_Vector
+                                     |          _PyFunction_Vectorcall
+                                     |          _PyObject_VectorcallTstate.lto_priv.2
+                                     |          PyObject_Vectorcall
+                                     |          _PyEval_EvalFrameDefault
+                                     |          py::<module>:./scripts/profile_btree.py
+                                     |          _PyEval_Vector
+                                     |          PyEval_EvalCode
+                                     |          run_eval_code_obj
+                                     |          run_mod
+                                     |          pyrun_file
+                                     |          _PyRun_SimpleFileObject
+                                     |          _PyRun_AnyFileObject
+                                     |          pymain_run_file_obj
+                                     |          pymain_run_file
+                                     |          pymain_run_python
+                                     |          Py_RunMain
+                                     |          pymain_main
+                                     |          Py_BytesMain
+                                     |          main
+                                     |          __libc_start_call_main
+                                     |          
+                                      --0.72%--_PyEval_EvalFrameDefault
+                                                py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                _PyEval_Vector
+                                                _PyFunction_Vectorcall
+                                                _PyObject_VectorcallTstate.lto_priv.2
+                                                PyObject_Vectorcall
+                                                _PyEval_EvalFrameDefault
+                                                py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                _PyEval_Vector
+                                                _PyFunction_Vectorcall
+                                                _PyObject_VectorcallTstate.lto_priv.2
+                                                PyObject_Vectorcall
+                                                _PyEval_EvalFrameDefault
+                                                py::main:./scripts/profile_btree.py
+                                                _PyEval_Vector
+                                                _PyFunction_Vectorcall
+                                                _PyObject_VectorcallTstate.lto_priv.2
+                                                PyObject_Vectorcall
+                                                _PyEval_EvalFrameDefault
+                                                py::<module>:./scripts/profile_btree.py
+                                                _PyEval_Vector
+                                                PyEval_EvalCode
+                                                run_eval_code_obj
+                                                run_mod
+                                                pyrun_file
+                                                _PyRun_SimpleFileObject
+                                                _PyRun_AnyFileObject
+                                                pymain_run_file_obj
+                                                pymain_run_file
+                                                pymain_run_python
+                                                Py_RunMain
+                                                pymain_main
+                                                Py_BytesMain
+                                                main
+                                                __libc_start_call_main
+
+     3.24%  [.] _Py_DECREF_DecRefTotal                                                                                                 -      -            
+            |          
+             --0.63%--clear_thread_frame
+                       _PyEvalFrameClearAndPop.lto_priv.0
+                       _PyEval_EvalFrameDefault
+
+     2.50%  [.] _PyObject_IsFreed                                                                                                      -      -            
+            |          
+            |--1.00%--list_traverse.lto_priv.0
+            |          subtract_refs.lto_priv.0
+            |          gc_collect_main
+            |          gc_collect_with_callback
+            |          |          
+            |           --0.85%--gc_collect_generations
+            |                     _Py_RunGC
+            |                     _Py_HandlePending
+            |                     _PyEval_EvalFrameDefault
+            |                     |          
+            |                      --0.77%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.6
+            |                                vectorcall_method.lto_priv.0
+            |                                slot_mp_ass_subscript.lto_priv.0
+            |                                PyObject_SetItem
+            |                                _PyEval_EvalFrameDefault
+            |                                py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::main:./scripts/profile_btree.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::<module>:./scripts/profile_btree.py
+            |                                _PyEval_Vector
+            |                                PyEval_EvalCode
+            |                                run_eval_code_obj
+            |                                run_mod
+            |                                pyrun_file
+            |                                _PyRun_SimpleFileObject
+            |                                _PyRun_AnyFileObject
+            |                                pymain_run_file_obj
+            |                                pymain_run_file
+            |                                pymain_run_python
+            |                                Py_RunMain
+            |                                pymain_main
+            |                                Py_BytesMain
+            |                                main
+            |                                __libc_start_call_main
+            |          
+             --0.92%--tupletraverse.lto_priv.0
+                       subtract_refs.lto_priv.0
+                       gc_collect_main
+                       |          
+                        --0.91%--gc_collect_with_callback
+                                  |          
+                                   --0.78%--gc_collect_generations
+                                             _Py_RunGC
+                                             _Py_HandlePending
+                                             _PyEval_EvalFrameDefault
+                                             |          
+                                              --0.72%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                        _PyEval_Vector
+                                                        _PyFunction_Vectorcall
+                                                        _PyObject_VectorcallTstate.lto_priv.2
+                                                        PyObject_Vectorcall
+                                                        _PyEval_EvalFrameDefault
+                                                        py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                        _PyEval_Vector
+                                                        _PyFunction_Vectorcall
+                                                        _PyObject_VectorcallTstate.lto_priv.2
+                                                        PyObject_Vectorcall
+                                                        _PyEval_EvalFrameDefault
+                                                        py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                        _PyEval_Vector
+                                                        _PyFunction_Vectorcall
+                                                        _PyObject_VectorcallTstate.lto_priv.6
+                                                        vectorcall_method.lto_priv.0
+                                                        slot_mp_ass_subscript.lto_priv.0
+                                                        PyObject_SetItem
+                                                        _PyEval_EvalFrameDefault
+                                                        py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                        _PyEval_Vector
+                                                        _PyFunction_Vectorcall
+                                                        _PyObject_VectorcallTstate.lto_priv.2
+                                                        PyObject_Vectorcall
+                                                        _PyEval_EvalFrameDefault
+                                                        py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                        _PyEval_Vector
+                                                        _PyFunction_Vectorcall
+                                                        _PyObject_VectorcallTstate.lto_priv.2
+                                                        PyObject_Vectorcall
+                                                        _PyEval_EvalFrameDefault
+                                                        py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                        _PyEval_Vector
+                                                        _PyFunction_Vectorcall
+                                                        _PyObject_VectorcallTstate.lto_priv.2
+                                                        PyObject_Vectorcall
+                                                        _PyEval_EvalFrameDefault
+                                                        py::main:./scripts/profile_btree.py
+                                                        _PyEval_Vector
+                                                        _PyFunction_Vectorcall
+                                                        _PyObject_VectorcallTstate.lto_priv.2
+                                                        PyObject_Vectorcall
+                                                        _PyEval_EvalFrameDefault
+                                                        py::<module>:./scripts/profile_btree.py
+                                                        _PyEval_Vector
+                                                        PyEval_EvalCode
+                                                        run_eval_code_obj
+                                                        run_mod
+                                                        pyrun_file
+                                                        _PyRun_SimpleFileObject
+                                                        _PyRun_AnyFileObject
+                                                        pymain_run_file_obj
+                                                        pymain_run_file
+                                                        pymain_run_python
+                                                        Py_RunMain
+                                                        pymain_main
+                                                        Py_BytesMain
+                                                        main
+                                                        __libc_start_call_main
+
+     2.24%  [.] _Py_INCREF_IncRefTotal                                                                                                 -      -            
+            |          
+             --0.60%--_PyFunction_Vectorcall
+                       |          
+                        --0.55%--_PyObject_VectorcallTstate.lto_priv.2
+                                  PyObject_Vectorcall
+                                  _PyEval_EvalFrameDefault
+
+     1.94%  [.] visit_reachable                                                                                                        -      -            
+            |          
+            |--0.82%--list_traverse.lto_priv.0
+            |          move_unreachable.lto_priv.0
+            |          gc_collect_main
+            |          gc_collect_with_callback
+            |          |          
+            |           --0.67%--gc_collect_generations
+            |                     _Py_RunGC
+            |                     _Py_HandlePending
+            |                     _PyEval_EvalFrameDefault
+            |                     |          
+            |                      --0.60%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.6
+            |                                vectorcall_method.lto_priv.0
+            |                                slot_mp_ass_subscript.lto_priv.0
+            |                                PyObject_SetItem
+            |                                _PyEval_EvalFrameDefault
+            |                                py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::main:./scripts/profile_btree.py
+            |                                _PyEval_Vector
+            |                                _PyFunction_Vectorcall
+            |                                _PyObject_VectorcallTstate.lto_priv.2
+            |                                PyObject_Vectorcall
+            |                                _PyEval_EvalFrameDefault
+            |                                py::<module>:./scripts/profile_btree.py
+            |                                _PyEval_Vector
+            |                                PyEval_EvalCode
+            |                                run_eval_code_obj
+            |                                run_mod
+            |                                pyrun_file
+            |                                _PyRun_SimpleFileObject
+            |                                _PyRun_AnyFileObject
+            |                                pymain_run_file_obj
+            |                                pymain_run_file
+            |                                pymain_run_python
+            |                                Py_RunMain
+            |                                pymain_main
+            |                                Py_BytesMain
+            |                                main
+            |                                __libc_start_call_main
+            |          
+             --0.55%--tupletraverse.lto_priv.0
+                       move_unreachable.lto_priv.0
+                       gc_collect_main
+                       gc_collect_with_callback
+
+     1.93%  [.] list_item.lto_priv.0                                                                                                   -      -            
+            |          
+             --1.86%--internal_bisect_left
+                       _bisect_bisect_left_impl
+                       _bisect_bisect_left
+                       _PyEval_EvalFrameDefault
+                       py::BNode.get_position_opt:./benchmark/optimized/bm_btree/run_benchmark.py
+                       _PyEval_Vector
+                       _PyFunction_Vectorcall
+                       _PyObject_VectorcallTstate.lto_priv.2
+                       PyObject_Vectorcall
+                       _PyEval_EvalFrameDefault
+                       |          
+                        --1.42%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                                  _PyEval_Vector
+                                  _PyFunction_Vectorcall
+                                  _PyObject_VectorcallTstate.lto_priv.2
+                                  PyObject_Vectorcall
+                                  _PyEval_EvalFrameDefault
+                                  |          
+                                   --1.30%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                                             _PyEval_Vector
+                                             _PyFunction_Vectorcall
+                                             _PyObject_VectorcallTstate.lto_priv.2
+                                             PyObject_Vectorcall
+                                             _PyEval_EvalFrameDefault
+                                             |          
+                                              --1.03%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                        _PyEval_Vector
+                                                        _PyFunction_Vectorcall
+                                                        _PyObject_VectorcallTstate.lto_priv.2
+                                                        PyObject_Vectorcall
+                                                        _PyEval_EvalFrameDefault
+                                                        |          
+                                                         --0.57%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                                   _PyEval_Vector
+                                                                   _PyFunction_Vectorcall
+                                                                   _PyObject_VectorcallTstate.lto_priv.2
+                                                                   PyObject_Vectorcall
+                                                                   _PyEval_EvalFrameDefault
+                                                                   py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                                   _PyEval_Vector
+                                                                   _PyFunction_Vectorcall
+                                                                   _PyObject_VectorcallTstate.lto_priv.2
+                                                                   PyObject_Vectorcall
+                                                                   _PyEval_EvalFrameDefault
+                                                                   py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                                   _PyEval_Vector
+                                                                   _PyFunction_Vectorcall
+                                                                   _PyObject_VectorcallTstate.lto_priv.6
+                                                                   vectorcall_method.lto_priv.0
+                                                                   slot_mp_ass_subscript.lto_priv.0
+                                                                   PyObject_SetItem
+                                                                   _PyEval_EvalFrameDefault
+                                                                   py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                                   _PyEval_Vector
+                                                                   _PyFunction_Vectorcall
+                                                                   _PyObject_VectorcallTstate.lto_priv.2
+                                                                   PyObject_Vectorcall
+                                                                   _PyEval_EvalFrameDefault
+                                                                   py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                                   _PyEval_Vector
+                                                                   _PyFunction_Vectorcall
+                                                                   _PyObject_VectorcallTstate.lto_priv.2
+                                                                   PyObject_Vectorcall
+                                                                   _PyEval_EvalFrameDefault
+                                                                   py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+                                                                   _PyEval_Vector
+                                                                   _PyFunction_Vectorcall
+                                                                   _PyObject_VectorcallTstate.lto_priv.2
+                                                                   PyObject_Vectorcall
+                                                                   _PyEval_EvalFrameDefault
+                                                                   py::main:./scripts/profile_btree.py
+                                                                   _PyEval_Vector
+                                                                   _PyFunction_Vectorcall
+                                                                   _PyObject_VectorcallTstate.lto_priv.2
+                                                                   PyObject_Vectorcall
+                                                                   _PyEval_EvalFrameDefault
+                                                                   py::<module>:./scripts/profile_btree.py
+                                                                   _PyEval_Vector
+                                                                   PyEval_EvalCode
+                                                                   run_eval_code_obj
+                                                                   run_mod
+                                                                   pyrun_file
+                                                                   _PyRun_SimpleFileObject
+                                                                   _PyRun_AnyFileObject
+                                                                   pymain_run_file_obj
+                                                                   pymain_run_file
+                                                                   pymain_run_python
+                                                                   Py_RunMain
+                                                                   pymain_main
+                                                                   Py_BytesMain
+                                                                   main
+                                                                   __libc_start_call_main
+
+     1.62%  [.] _PyEval_Vector                                                                                                         -      -            
+            |          
+             --1.57%--_PyFunction_Vectorcall
+                       |          
+                        --1.44%--_PyObject_VectorcallTstate.lto_priv.2
+                                  PyObject_Vectorcall
+                                  _PyEval_EvalFrameDefault
+                                  |          
+                                   --0.63%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                                             _PyEval_Vector
+                                             _PyFunction_Vectorcall
+                                             _PyObject_VectorcallTstate.lto_priv.2
+                                             PyObject_Vectorcall
+                                             _PyEval_EvalFrameDefault
+
+     1.42%  [.] initialize_locals                                                                                                      -      -            
+            |          
+             --1.39%--_PyEvalFramePushAndInit.lto_priv.0
+                       _PyEval_Vector
+                       _PyFunction_Vectorcall
+                       |          
+                        --1.27%--_PyObject_VectorcallTstate.lto_priv.2
+                                  PyObject_Vectorcall
+                                  _PyEval_EvalFrameDefault
+                                  |          
+                                   --0.55%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                                             _PyEval_Vector
+                                             _PyFunction_Vectorcall
+                                             _PyObject_VectorcallTstate.lto_priv.2
+                                             PyObject_Vectorcall
+                                             _PyEval_EvalFrameDefault
+
+     1.35%  [.] py_trampoline_evaluator                                                                                                -      -            
+            |          
+             --1.06%--_PyEval_Vector
+                       _PyFunction_Vectorcall
+                       |          
+                        --0.97%--_PyObject_VectorcallTstate.lto_priv.2
+                                  PyObject_Vectorcall
+                                  _PyEval_EvalFrameDefault
+
+     1.23%  [.] _PyFrame_ClearExceptCode                                                                                               -      -            
+            |          
+             --1.20%--clear_thread_frame
+                       _PyEvalFrameClearAndPop.lto_priv.0
+                       _PyEval_EvalFrameDefault
+
+     1.03%  [.] gc_list_size.lto_priv.0                                                                                                -      -            
+            |
+            ---gc_collect_with_callback
+               |          
+                --0.70%--gc_collect_generations
+                          _Py_RunGC
+                          _Py_HandlePending
+                          _PyEval_EvalFrameDefault
+                          |          
+                           --0.63%--py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py
+                                     _PyEval_Vector
+                                     _PyFunction_Vectorcall
+                                     _PyObject_VectorcallTstate.lto_priv.2
+                                     PyObject_Vectorcall
+                                     _PyEval_EvalFrameDefault
+                                     py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py
+                                     _PyEval_Vector
+                                     _PyFunction_Vectorcall
+                                     _PyObject_VectorcallTstate.lto_priv.2
+                                     PyObject_Vectorcall
+                                     _PyEval_EvalFrameDefault
+                                     py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py
+                                     _PyEval_Vector
+                                     _PyFunction_Vectorcall
+                                     _PyObject_VectorcallTstate.lto_priv.6
+                                     vectorcall_method.lto_priv.0
+                                     slot_mp_ass_subscript.lto_priv.0
+                                     PyObject_SetItem
+                                     _PyEval_EvalFrameDefault
+                                     py::make_tree:./benchmark/optimized/bm_btree/run_benchmark.py
+                                     _PyEval_Vector
+                                     _PyFunction_Vectorcall
+                                     _PyObject_VectorcallTstate.lto_priv.2
+                                     PyObject_Vectorcall
+                                     _PyEval_EvalFrameDefault
+                                     py::run_once:./benchmark/optimized/bm_btree/run_benchmark.py
+                                     _PyEval_Vector
+                                     _PyFunction_Vectorcall
+                                     _PyObject_VectorcallTstate.lto_priv.2
+                                     PyObject_Vectorcall
+                                     _PyEval_EvalFrameDefault
+                                     py::run_bench:./benchmark/optimized/bm_btree/run_benchmark.py
+                                     _PyEval_Vector
+                                     _PyFunction_Vectorcall
+                                     _PyObject_VectorcallTstate.lto_priv.2
+                                     PyObject_Vectorcall
+                                     _PyEval_EvalFrameDefault
+                                     py::main:./scripts/profile_btree.py
+                                     _PyEval_Vector
+                                     _PyFunction_Vectorcall
+                                     _PyObject_VectorcallTstate.lto_priv.2
+                                     PyObject_Vectorcall
+                                     _PyEval_EvalFrameDefault
+                                     py::<module>:./scripts/profile_btree.py
+                                     _PyEval_Vector
+                                     PyEval_EvalCode
+                                     run_eval_code_obj
+                                     run_mod
+                                     pyrun_file
+                                     _PyRun_SimpleFileObject
+                                     _PyRun_AnyFileObject
+                                     pymain_run_file_obj
+                                     pymain_run_file
+                                     pymain_run_python
+                                     Py_RunMain
+                                     pymain_main
+                                     Py_BytesMain
+                                     main
+                                     __libc_start_call_main
+
+     1.02%  [.] unicodekeys_lookup_unicode                                                                                             -      -            
+            |          
+             --0.92%--_Py_dict_lookup
+                       |          
+                        --0.69%--PyDict_Contains
+                                  _PyEval_EvalFrameDefault
+
+     1.01%  [.] _PyEvalFramePushAndInit.lto_priv.0                                                                                     -      -            
+            |          
+             --1.00%--_PyEval_Vector
+                       _PyFunction_Vectorcall
+                       |          
+                        --0.91%--_PyObject_VectorcallTstate.lto_priv.2
+                                  PyObject_Vectorcall
+                                  _PyEval_EvalFrameDefault
+
+     0.97%  [.] _PyMem_DebugCheckAddress                                                                                               -      -            
+            |          
+             --0.87%--_PyMem_DebugRawFree
+                       _PyMem_DebugFree
+                       |          
+                        --0.77%--PyObject_Free
+
+     0.95%  [.] _PyObject_VectorcallTstate.lto_priv.2                                                                                  -      -            
+            |          
+             --0.94%--PyObject_Vectorcall
+                       _PyEval_EvalFrameDefault
+
+     0.84%  [.] internal_bisect_left                                                                                                   -      -            
+            |          
+             --0.81%--_bisect_bisect_left_impl
+                       _bisect_bisect_left
+                       _PyEval_EvalFrameDefault
+                       py::BNode.get_position_opt:./benchmark/optimized/bm_btree/run_benchmark.py
+                       _PyEval_Vector
+                       _PyFunction_Vectorcall
+                       _PyObject_VectorcallTstate.lto_priv.2
+                       PyObject_Vectorcall
+                       _PyEval_EvalFrameDefault
+
+     0.83%  [.] _Py_dict_lookup                                                                                                        -      -            
+            |          
+             --0.59%--PyDict_Contains
+                       _PyEval_EvalFrameDefault
+
+     0.78%  [.] untrack_dicts.lto_priv.0                                                                                               -      -            
+            |
+            ---gc_collect_main
+               gc_collect_with_callback
+               |          
+                --0.50%--gc_collect_generations
+                          _Py_RunGC
+                          _Py_HandlePending
+                          _PyEval_EvalFrameDefault
+
+     0.77%  [.] _PyObject_Malloc                                                                                                       -      -            
+            |          
+             --0.70%--_PyMem_DebugRawAlloc
+                       _PyMem_DebugRawMalloc
+                       _PyMem_DebugMalloc
+                       |          
+                        --0.62%--PyObject_Malloc
+
+     0.72%  [.] _PyFunction_Vectorcall                                                                                                 -      -            
+     0.68%  [.] update_refs.lto_priv.0                                                                                                 -      -            
+            |
+            ---gc_collect_main
+               |          
+                --0.67%--gc_collect_with_callback
+
+     0.67%  [.] pthread_getspecific@@GLIBC_2.34                                                                                        -      -            
+            |
+            ---PyGILState_Check
+
+     0.61%  [.] long_richcompare.lto_priv.0                                                                                            -      -            
+     0.60%  [.] PyGILState_Check                                                                                                       -      -            
+     0.60%  [.] visit_decref                                                                                                           -      -            
+     0.58%  [.] clear_thread_frame                                                                                                     -      -            
+            |          
+             --0.53%--_PyEvalFrameClearAndPop.lto_priv.0
+                       _PyEval_EvalFrameDefault
+
+     0.56%  [.] PyUnstable_Code_GetExtra                                                                                               -      -            
+     0.52%  [.] PyObject_IS_GC                                                                                                         -      -            
+            |          
+             --0.51%--untrack_tuples.lto_priv.0
+                       gc_collect_main
+                       gc_collect_with_callback
+
+     0.51%  [.] _Py_CheckFunctionResult                                                                                                -      -            
+     0.51%  [.] untrack_tuples.lto_priv.0                                                                                              -      -            
+            |
+            ---gc_collect_main
+               gc_collect_with_callback
+
+     0.50%  [.] long_compare                                                                                                           -      -            
+     0.49%  [.] read_size_t                                                                                                            -      -            
+     0.47%  [.] _PyType_Lookup                                                                                                         -      -            
+     0.46%  [.] PyDict_Contains                                                                                                        -      -            
+     0.42%  [.] PyObject_Vectorcall                                                                                                    -      -            
+     0.42%  [.] __memset_avx2_unaligned_erms                                                                                           -      -            
+     0.39%  [.] move_unreachable.lto_priv.0                                                                                            -      -            
+     0.37%  [.] arena_map_is_used                                                                                                      -      -            
+     0.31%  [.] _PyObject_Free                                                                                                         -      -            
+     0.29%  [.] PyLong_FromSsize_t                                                                                                     -      -            
+     0.29%  [.] _PyMem_DebugRawAlloc                                                                                                   -      -            
+     0.29%  [.] _PyThreadState_PushFrame                                                                                               -      -            
+     0.28%  [.] _PyObject_GenericGetAttrWithDict                                                                                       -      -            
+     0.26%  [.] list_traverse.lto_priv.0                                                                                               -      -            
+     0.25%  [.] _PyObject_VisitManagedDict                                                                                             -      -            
+     0.25%  [.] tupledealloc.lto_priv.0                                                                                                -      -            
+     0.25%  [.] get_small_int.lto_priv.0                                                                                               -      -            
+     0.24%  [.] listiter_next.lto_priv.0                                                                                               -      -            
+     0.23%  [.] PyThread_tss_get                                                                                                       -      -            
+     0.23%  [.] subtype_traverse                                                                                                       -      -            
+     0.23%  [.] PyErr_Occurred                                                                                                         -      -            
+     0.23%  [.] _Py_NewReference                                                                                                       -      -            
+     0.23%  [.] _PyThreadState_PopFrame                                                                                                -      -            
+     0.22%  [.] _PyLong_Subtract                                                                                                       -      -            
+     0.22%  [.] _PyObject_GetMethod                                                                                                    -      -            
+     0.21%  [.] _Py_Dealloc                                                                                                            -      -            
+     0.21%  [.] write_size_t                                                                                                           -      -            
+     0.20%  [.] gen_send_ex2                                                                                                           -      -            
+     0.19%  [.] ins1                                                                                                                   -      -            
+     0.19%  [.] PyObject_GetAttr                                                                                                       -      -            
+     0.19%  [.] _PyLong_Multiply                                                                                                       -      -            
+     0.19%  [.] _Py_CheckSlotResult                                                                                                    -      -            
+     0.19%  [.] list_dealloc.lto_priv.0                                                                                                -      -            
+     0.18%  [.] PyObject_Size                                                                                                          -      -            
+     0.18%  [.] _bisect_bisect_left                                                                                                    -      -            
+     0.18%  [.] gen_iternext.lto_priv.0                                                                                                -      -            
+     0.18%  [.] genrand_uint32                                                                                                         -      -            
+     0.18%  [.] tupletraverse.lto_priv.0                                                                                               -      -            
+     0.17%  [.] py::BNode.is_leaf:./benchmark/optimized/bm_btree/run_benchmark.py           -      -            
+     0.17%  [.] subtract_refs.lto_priv.0                                                                                               -      -            
+     0.16%  [.] PyThread_tss_is_created                                                                                                -      -            
+     0.16%  [.] _PyUnicode_CheckConsistency                                                                                            -      -            
+     0.15%  [.] _PyLong_AsByteArray                                                                                                    -      -            
+     0.14%  [.] PyUnicode_New                                                                                                          -      -            
+     0.14%  [.] PyObject_GC_UnTrack                                                                                                    -      -            
+     0.14%  [.] _PyEvalFrameClearAndPop.lto_priv.0                                                                                     -      -            
+     0.14%  [.] Py_LeaveRecursiveCall                                                                                                  -      -            
+     0.14%  [.] _PyMem_DebugRawFree                                                                                                    -      -            
+     0.13%  [.] PySequence_Size                                                                                                        -      -            
+     0.13%  [.] list_slice.lto_priv.0                                                                                                  -      -            
+     0.13%  [.] _PyMem_DebugFree                                                                                                       -      -            
+     0.12%  [.] PyCallable_Check                                                                                                       -      -            
+     0.12%  [.] long_to_decimal_string_internal                                                                                        -      -            
+     0.11%  [.] _PyObject_VectorcallTstate.lto_priv.6                                                                                  -      -            
+     0.11%  [.] _PyMem_DebugMalloc                                                                                                     -      -            
+     0.11%  [.] list_length.lto_priv.0                                                                                                 -      -            
+     0.10%  [.] PyObject_GC_Del                                                                                                        -      -            
+     0.10%  [.] _PyLong_FromByteArray                                                                                                  -      -            
+     0.10%  [.] py::BNode.insert_item:./benchmark/optimized/bm_btree/run_benchmark.py       -      -            
+     0.09%  [.] list_extend.lto_priv.0                                                                                                 -      -            
+     0.09%  [.] vectorcall_method.lto_priv.0                                                                                           -      -            
+     0.09%  [.] PyDict_GetItemWithError                                                                                                -      -            
+     0.09%  [.] _PyTuple_MaybeUntrack                                                                                                  -      -            
+     0.09%  [.] __memmove_avx_unaligned_erms                                                                                           -      -            
+     0.08%  [.] _PyTrash_get_state                                                                                                     -      -            
+     0.08%  [.] _random_Random_getrandbits_impl                                                                                        -      -            
+     0.08%  [.] _PyMem_DebugRawMalloc                                                                                                  -      -            
+     0.07%  [.] PyFunction_NewWithQualName                                                                                             -      -            
+     0.07%  [.] PyType_IsSubtype                                                                                                       -      -            
+     0.07%  [.] _PyObject_FreeInstanceAttributes                                                                                       -      -            
+     0.07%  [.] lookup_maybe_method.lto_priv.0                                                                                         -      -            
+     0.07%  [.] PyLong_AsLongAndOverflow                                                                                               -      -            
+     0.07%  [.] get_sq_item                                                                                                            -      -            
+     0.07%  [.] meth_dealloc.lto_priv.0                                                                                                -      -            
+     0.07%  [.] py::BNode.search:./benchmark/optimized/bm_btree/run_benchmark.py            -      -            
+     0.07%  [.] pymalloc_pool_extend                                                                                                   -      -            
+     0.06%  [.] _copy_characters                                                                                                       -      -            
+     0.06%  [.] address_in_range                                                                                                       -      -            
+     0.06%  [.] list_resize.lto_priv.0                                                                                                 -      -            
+     0.06%  [.] slot_mp_ass_subscript.lto_priv.0                                                                                       -      -            
+     0.06%  [.] PyUnicode_DATA.lto_priv.5                                                                                              -      -            
+     0.05%  [.] PyObject_GetItem                                                                                                       -      -            
+     0.05%  [.] _PyLong_FromMedium.lto_priv.0                                                                                          -      -            
+     0.05%  [.] _PyLong_New                                                                                                            -      -            
+     0.05%  [.] _PyUnicode_JoinArray                                                                                                   -      -            
+     0.05%  [.] long_dealloc.lto_priv.0                                                                                                -      -            
+     0.05%  [.] PyErr_CheckSignals                                                                                                     -      -            
+     0.05%  [.] PyObject_IsTrue                                                                                                        -      -            
+     0.05%  [.] subtype_dealloc                                                                                                        -      -            
+     0.05%  [.] _PyTrash_end                                                                                                           -      -            
+     0.05%  [k] 0xffffffffbea00be0                                                                                                     -      -            
+     0.04%  [.] PyCMethod_New                                                                                                          -      -            
+     0.04%  [.] PyList_New                                                                                                             -      -            
+     0.04%  [.] PyObject_SetItem                                                                                                       -      -            
+     0.04%  [.] _PyLong_Add                                                                                                            -      -            
+     0.04%  [.] _PyType_GetDict                                                                                                        -      -            
+     0.04%  [.] descr_check                                                                                                            -      -            
+     0.04%  [.] get_type_cache.lto_priv.0                                                                                              -      -            
+     0.04%  [.] PyObject_Free                                                                                                          -      -            
+     0.04%  [.] PyObject_Malloc                                                                                                        -      -            
+     0.04%  [.] _PyObject_GC_New                                                                                                       -      -            
+     0.04%  [.] _PyTrash_begin                                                                                                         -      -            
+     0.04%  [.] _PyTuple_FromArray                                                                                                     -      -            
+     0.04%  [.] _PyTuple_FromArraySteal                                                                                                -      -            
+     0.04%  [.] list_insert.lto_priv.0                                                                                                 -      -            
+     0.04%  [.] type_call.lto_priv.0                                                                                                   -      -            
+     0.03%  [.] PyFloat_FromDouble                                                                                                     -      -            
+     0.03%  [.] PyNumber_Index                                                                                                         -      -            
+     0.03%  [.] _PyCode_Quicken                                                                                                        -      -            
+     0.03%  [.] _PyNumber_Index                                                                                                        -      -            
+     0.03%  [.] _PyObject_GC_Link                                                                                                      -      -            
+     0.03%  [.] _Py_hashtable_get_entry_generic                                                                                        -      -            
+     0.03%  [.] find_name_in_mro.lto_priv.0                                                                                            -      -            
+     0.03%  [.] insert_to_usedpool                                                                                                     -      -            
+     0.03%  [.] list_concat.lto_priv.0                                                                                                 -      -            
+     0.03%  [.] py::BTree.iterkeys:./benchmark/optimized/bm_btree/run_benchmark.py          -      -            
+     0.03%  [.] slot_mp_subscript.lto_priv.0                                                                                           -      -            
+     0.03%  [.] tuple_alloc                                                                                                            -      -            
+     0.03%  [.] PyLong_FromLong                                                                                                        -      -            
+     0.03%  [.] PyObject_Str                                                                                                           -      -            
+     0.03%  [.] dict_traverse.lto_priv.0                                                                                               -      -            
+     0.03%  [.] float_dealloc.lto_priv.0                                                                                               -      -            
+     0.03%  [.] gc_alloc                                                                                                               -      -            
+     0.03%  [.] int_bit_length_impl.lto_priv.0                                                                                         -      -            
+     0.03%  [.] int_to_bytes.lto_priv.0                                                                                                -      -            
+     0.03%  [.] intern_common                                                                                                          -      -            
+     0.03%  [.] method_get.lto_priv.0                                                                                                  -      -            
+     0.03%  [.] type_is_gc.lto_priv.0                                                                                                  -      -            
+     0.02%  [.] PyType_GenericAlloc                                                                                                    -      -            
+     0.02%  [.] Py_EnterRecursiveCall                                                                                                  -      -            
+     0.02%  [.] _PyDict_MaybeUntrack                                                                                                   -      -            
+     0.02%  [.] _PyLong_AsInt                                                                                                          -      -            
+     0.02%  [.] _bisect_bisect_left_impl                                                                                               -      -            
+     0.02%  [.] func_dealloc.lto_priv.0                                                                                                -      -            
+     0.02%  [.] list_ass_slice.lto_priv.0                                                                                              -      -            
+     0.02%  [.] py::BTree.__iter__:./benchmark/optimized/bm_btree/run_benchmark.py          -      -            
+     0.02%  [.] py::BTree.add:./benchmark/optimized/bm_btree/run_benchmark.py               -      -            
+     0.02%  [.] slot_tp_init                                                                                                           -      -            
+     0.02%  [.] sys_intern_impl                                                                                                        -      -            
+     0.02%  [.] unicode_fill_invalid                                                                                                   -      -            
+     0.02%  [.] 0x0000000000022180                                                                                                     -      -            
+     0.02%  [.] 0x0000000000023760                                                                                                     -      -            
+     0.02%  [.] PyLong_AsSsize_t                                                                                                       -      -            
+     0.02%  [.] PyLong_FromUnsignedLong                                                                                                -      -            
+     0.02%  [.] PyObject_GenericGetAttr                                                                                                -      -            
+     0.02%  [.] PyUnicode_DATA                                                                                                         -      -            
+     0.02%  [.] _PyObject_ComputedDictPointer                                                                                          -      -            
+     0.02%  [.] _PyObject_GC_NewVar                                                                                                    -      -            
+     0.02%  [.] _PyUnicode_Equal                                                                                                       -      -            
+     0.02%  [.] fast_mod                                                                                                               -      -            
+     0.02%  [.] get_gc_state.lto_priv.0                                                                                                -      -            
+     0.02%  [.] hashtable_unicode_hash                                                                                                 -      -            
+     0.02%  [.] list_preallocate_exact                                                                                                 -      -            
+     0.02%  [.] long_mod.lto_priv.0                                                                                                    -      -            
+     0.02%  [.] lookup_method.lto_priv.0                                                                                               -      -            
+     0.02%  [.] maybe_small_long.lto_priv.0                                                                                            -      -            
+     0.02%  [.] method_vectorcall_NOARGS                                                                                               -      -            
+     0.02%  [.] siphash13                                                                                                              -      -            
+     0.02%  [.] unicode_dealloc.lto_priv.0                                                                                             -      -            
+     0.02%  [.] unicode_is_singleton.lto_priv.0                                                                                        -      -            
+     0.01%  [.] PySlice_AdjustIndices                                                                                                  -      -            
+     0.01%  [.] PyThread_get_thread_ident                                                                                              -      -            
+     0.01%  [.] _PyDict_GetItem_KnownHash                                                                                              -      -            
+     0.01%  [.] _PyErr_CheckSignalsTstate                                                                                              -      -            
+     0.01%  [.] _PyList_FromArraySteal                                                                                                 -      -            
+     0.01%  [.] _PyMem_DebugRawRealloc                                                                                                 -      -            
+     0.01%  [.] _PyObject_FastCallDictTstate                                                                                           -      -            
+     0.01%  [.] _PyObject_Realloc                                                                                                      -      -            
+     0.01%  [.] _PyTrash_clear_state                                                                                                   -      -            
+     0.01%  [.] _PyTrash_cond                                                                                                          -      -            
+     0.01%  [.] __GI___pthread_self                                                                                                    -      -            
+     0.01%  [.] __strlen_avx2                                                                                                          -      -            
+     0.01%  [.] binary_op1                                                                                                             -      -            
+     0.01%  [.] insert_to_freepool                                                                                                     -      -            
+     0.01%  [.] int_bit_length.lto_priv.0                                                                                              -      -            
+     0.01%  [.] int_to_bytes_impl.lto_priv.0                                                                                           -      -            
+     0.01%  [.] py::BNode.__iter__:./benchmark/optimized/bm_btree/run_benchmark.py          -      -            
+     0.01%  [.] py::BNode.delete:./benchmark/optimized/bm_btree/run_benchmark.py            -      -            
+     0.01%  [.] py::BNode.get_position_opt:./benchmark/optimized/bm_btree/run_benchmark.py  -      -            
+     0.01%  [.] py::BTree.__getitem__:./benchmark/optimized/bm_btree/run_benchmark.py       -      -            
+     0.01%  [.] py::Random._randbelow_with_getrandbits:/usr/lib/python3.12/random.py                                                   -      -            
+     0.01%  [.] py::Random.randbytes:/usr/lib/python3.12/random.py                                                                     -      -            
+     0.01%  [.] r_object                                                                                                               -      -            
+     0.01%  [.] rangeiter_next.lto_priv.0                                                                                              -      -            
+     0.01%  [.] traverse_slots                                                                                                         -      -            
+     0.01%  [.] update_one_slot                                                                                                        -      -            
+     0.01%  [.] PyBytes_FromStringAndSize                                                                                              -      -            
+     0.01%  [.] PyDict_SetDefault                                                                                                      -      -            
+     0.01%  [.] PyMem_Free                                                                                                             -      -            
+     0.01%  [.] PyMem_Malloc                                                                                                           -      -            
+     0.01%  [.] PyNumber_AsSsize_t                                                                                                     -      -            
+     0.01%  [.] PyObject_Format                                                                                                        -      -            
+     0.01%  [.] PySlice_Unpack                                                                                                         -      -            
+     0.01%  [.] _PyEval_BuiltinsFromGlobals                                                                                            -      -            
+     0.01%  [.] _PyEval_SliceIndex                                                                                                     -      -            
+     0.01%  [.] _PyObject_Call_Prepend                                                                                                 -      -            
+     0.01%  [.] _PyObject_Calloc                                                                                                       -      -            
+     0.01%  [.] _PyObject_MakeTpCall                                                                                                   -      -            
+     0.01%  [.] _random_Random_getrandbits                                                                                             -      -            
+     0.01%  [.] add_operators.lto_priv.0                                                                                               -      -            
+     0.01%  [.] allocate_from_new_pool                                                                                                 -      -            
+     0.01%  [.] binary_op                                                                                                              -      -            
+     0.01%  [.] build_indices_unicode                                                                                                  -      -            
+     0.01%  [.] free_keys_object.lto_priv.0                                                                                            -      -            
+     0.01%  [.] func_clear.lto_priv.0                                                                                                  -      -            
+     0.01%  [.] init_inline_values                                                                                                     -      -            
+     0.01%  [.] l_mod                                                                                                                  -      -            
+     0.01%  [.] list_subscript.lto_priv.0                                                                                              -      -            
+     0.01%  [.] new_keys_object.lto_priv.0                                                                                             -      -            
+     0.01%  [.] py::BNode.is_full:./benchmark/optimized/bm_btree/run_benchmark.py           -      -            
+     0.01%  [.] py::BTree.__delitem__:./benchmark/optimized/bm_btree/run_benchmark.py       -      -            
+     0.01%  [.] py::BTree.__setitem__:./benchmark/optimized/bm_btree/run_benchmark.py       -      -            
+     0.01%  [.] py::Random.choice:/usr/lib/python3.12/random.py                                                                        -      -            
+     0.01%  [.] py::Random.randint:/usr/lib/python3.12/random.py                                                                       -      -            
+     0.01%  [.] py::Random.randrange:/usr/lib/python3.12/random.py                                                                     -      -            
+     0.01%  [k] 0xffffffffbea00d70                                                                                                     -      -            
+     0.01%  [.] 0x0000000000022184                                                                                                     -      -            
+     0.01%  [.] 0x0000000000023764                                                                                                     -      -            
+     0.00%  [.] PyBool_FromLong                                                                                                        -      -            
+     0.00%  [.] PyDescr_IsData                                                                                                         -      -            
+     0.00%  [.] PyDict_Clear                                                                                                           -      -            
+     0.00%  [.] PyDict_SetItem                                                                                                         -      -            
+     0.00%  [.] PyFunction_New                                                                                                         -      -            
+     0.00%  [.] PyIter_Check                                                                                                           -      -            
+     0.00%  [.] PyMapping_Check                                                                                                        -      -            
+     0.00%  [.] PyMem_Calloc                                                                                                           -      -            
+     0.00%  [.] PyMem_Realloc                                                                                                          -      -            
+     0.00%  [.] PyObject_ClearWeakRefs                                                                                                 -      -            
+     0.00%  [.] PyObject_GenericSetAttr                                                                                                -      -            
+     0.00%  [.] PyObject_GetIter                                                                                                       -      -            
+     0.00%  [.] PyTuple_Pack                                                                                                           -      -            
+     0.00%  [.] PyUnstable_Code_SetExtra                                                                                               -      -            
+     0.00%  [.] _IO_no_init                                                                                                            -      -            
+     0.00%  [.] _PyBuildSlice_Consume2                                                                                                 -      -            
+     0.00%  [.] _PyBytes_FromSize.lto_priv.0                                                                                           -      -            
+     0.00%  [.] _PyDictKeys_StringLookup                                                                                               -      -            
+     0.00%  [.] _PyDict_CheckConsistency                                                                                               -      -            
+     0.00%  [.] _PyList_AppendTakeRefListResize                                                                                        -      -            
+     0.00%  [.] _PyList_Extend                                                                                                         -      -            
+     0.00%  [.] _PyMem_DebugRealloc                                                                                                    -      -            
+     0.00%  [.] _PyPegen_expect_token                                                                                                  -      -            
+     0.00%  [.] _PyPegen_is_memoized                                                                                                   -      -            
+     0.00%  [.] _PyType_AllocNoTrack                                                                                                   -      -            
+     0.00%  [.] _PyUnicode_FastCopyCharacters                                                                                          -      -            
+     0.00%  [.] _PyUnicode_InternImmortal                                                                                              -      -            
+     0.00%  [.] _Py_DecRefTotal                                                                                                        -      -            
+     0.00%  [.] _Py_GetBaseOpcode                                                                                                      -      -            
+     0.00%  [.] _Py_GetConfig                                                                                                          -      -            
+     0.00%  [.] _Py_HashBytes                                                                                                          -      -            
+     0.00%  [.] __memcmp_avx2_movbe                                                                                                    -      -            
+     0.00%  [.] __strcmp_avx2                                                                                                          -      -            
+     0.00%  [.] __wcsrtombs                                                                                                            -      -            
+     0.00%  [.] _io_TextIOWrapper_fileno_impl.lto_priv.0                                                                               -      -            
+     0.00%  [.] _random_Random_random_impl                                                                                             -      -            
+     0.00%  [.] _swap_thread_states                                                                                                    -      -            
+     0.00%  [.] bit_length_digit.lto_priv.0                                                                                            -      -            
+     0.00%  [.] cell_dealloc.lto_priv.0                                                                                                -      -            
+     0.00%  [.] clear_slots                                                                                                            -      -            
+     0.00%  [.] code_dealloc.lto_priv.0                                                                                                -      -            
+     0.00%  [.] deopt_code                                                                                                             -      -            
+     0.00%  [.] find_empty_slot.lto_priv.0                                                                                             -      -            
+     0.00%  [.] func_traverse.lto_priv.0                                                                                               -      -            
+     0.00%  [.] gc_collect_main                                                                                                        -      -            
+     0.00%  [.] gc_list_move.lto_priv.0                                                                                                -      -            
+     0.00%  [.] gc_traverse.lto_priv.0                                                                                                 -      -            
+     0.00%  [.] get_float_state                                                                                                        -      -            
+     0.00%  [.] get_latin1_char.lto_priv.0                                                                                             -      -            
+     0.00%  [.] get_list_state                                                                                                         -      -            
+     0.00%  [.] get_localsplus_counts                                                                                                  -      -            
+     0.00%  [.] gettyperecord                                                                                                          -      -            
+     0.00%  [.] inherit_slots                                                                                                          -      -            
+     0.00%  [.] insert_to_emptydict.lto_priv.0                                                                                         -      -            
+     0.00%  [.] insertdict                                                                                                             -      -            
+     0.00%  [.] intern_string_constants.lto_priv.0                                                                                     -      -            
+     0.00%  [.] invoke_gc_callback                                                                                                     -      -            
+     0.00%  [.] list_ass_item.lto_priv.0                                                                                               -      -            
+     0.00%  [.] list_ass_subscript.lto_priv.0                                                                                          -      -            
+     0.00%  [.] list_iter.lto_priv.0                                                                                                   -      -            
+     0.00%  [.] locale_traverse                                                                                                        -      -            
+     0.00%  [.] long_bitwise                                                                                                           -      -            
+     0.00%  [.] long_new.lto_priv.0                                                                                                    -      -            
+     0.00%  [.] long_normalize.lto_priv.0                                                                                              -      -            
+     0.00%  [.] long_to_decimal_string.lto_priv.0                                                                                      -      -            
+     0.00%  [.] make_gen                                                                                                               -      -            
+     0.00%  [.] make_range_object.lto_priv.0                                                                                           -      -            
+     0.00%  [.] map_next.lto_priv.0                                                                                                    -      -            
+     0.00%  [.] merge_freemem                                                                                                          -      -            
+     0.00%  [.] meth_traverse.lto_priv.0                                                                                               -      -            
+     0.00%  [.] method_dealloc.lto_priv.0                                                                                              -      -            
+     0.00%  [.] method_vectorcall_O                                                                                                    -      -            
+     0.00%  [.] new_dict.lto_priv.0                                                                                                    -      -            
+     0.00%  [.] notify_code_watchers.lto_priv.0                                                                                        -      -            
+     0.00%  [.] object_dealloc.lto_priv.0                                                                                              -      -            
+     0.00%  [.] object_new.lto_priv.0                                                                                                  -      -            
+     0.00%  [.] object_str.lto_priv.0                                                                                                  -      -            
+     0.00%  [.] py::BNode.split_child:./benchmark/optimized/bm_btree/run_benchmark.py       -      -            
+     0.00%  [.] py::make_records:./benchmark/optimized/bm_btree/run_benchmark.py            -      -            
+     0.00%  [.] r_long                                                                                                                 -      -            
+     0.00%  [.] range_dealloc.lto_priv.0                                                                                               -      -            
+     0.00%  [.] resize_compact.lto_priv.0                                                                                              -      -            
+     0.00%  [.] resolve_slotdups                                                                                                       -      -            
+     0.00%  [.] rlock_acquire                                                                                                          -      -            
+     0.00%  [.] sem_trywait@@GLIBC_2.34                                                                                                -      -            
+     0.00%  [.] shift_expr_raw                                                                                                         -      -            
+     0.00%  [.] slice_dealloc.lto_priv.0                                                                                               -      -            
+     0.00%  [.] slotptr                                                                                                                -      -            
+     0.00%  [.] specialize_method_descriptor                                                                                           -      -            
+     0.00%  [.] sys_intern                                                                                                             -      -            
+     0.00%  [.] take_gil                                                                                                               -      -            
+     0.00%  [.] type_new_init                                                                                                          -      -            
+     0.00%  [.] type_new_slots_bases                                                                                                   -      -            
+     0.00%  [.] type_new_staticmethod                                                                                                  -      -            
+     0.00%  [.] type_traverse.lto_priv.0                                                                                               -      -            
+     0.00%  [.] unicode_compare_eq.lto_priv.0                                                                                          -      -            
+     0.00%  [.] unicode_hash.lto_priv.0                                                                                                -      -            
+     0.00%  [.] vgetargs1_impl                                                                                                         -      -            
+     0.00%  [.] 0x0000000000022ed0                                                                                                     -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

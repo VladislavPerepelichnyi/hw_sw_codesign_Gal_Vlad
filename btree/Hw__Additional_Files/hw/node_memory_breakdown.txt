@@ -1,0 +1,28 @@
+
+typical leaf: 15 items, leaf
+  part                                                 count bytes each    total  where
+  BNode object (3 slots: items, keys, nodes)               1         56       56  separate heap object
+  items list object (header + 15 pointers)                 1        176      176  separate heap object
+  keys list object (header + 15 pointers)                  1        176      176  separate heap object
+  (key, record) tuple                                     15         56      840  separate heap objects, scattered
+  int key object (shared by tuple and keys list)          15         28      420  separate heap objects, scattered
+  Record object + its __dict__ + attribute values         15        382     5741  separate heap objects, scattered
+  node bookkeeping (BNode + 2 lists)                                         408  3 allocations, not contiguous
+  everything the node refers to                                             7409  ~34 allocations
+  HARDWARE node block: count + 31 keys, array(I) 32-bit     1        128      128  ONE contiguous chunk, 128 B aligned = 2 lines
+
+typical internal node: 15 items, 16 children
+  part                                                 count bytes each    total  where
+  BNode object (3 slots: items, keys, nodes)               1         56       56  separate heap object
+  items list object (header + 15 pointers)                 1        176      176  separate heap object
+  keys list object (header + 15 pointers)                  1        176      176  separate heap object
+  nodes list object (header + 16 pointers)                 1        184      184  separate heap object
+  (key, record) tuple                                     15         56      840  separate heap objects, scattered
+  int key object (shared by tuple and keys list)          15         28      420  separate heap objects, scattered
+  Record object + its __dict__ + attribute values         15        430     6451  separate heap objects, scattered
+  node bookkeeping (BNode + 3 lists)                                         592  4 allocations, not contiguous
+  everything the node refers to                                             8303  ~35 allocations
+  HARDWARE node block: count + 31 keys, array(I) 32-bit     1        128      128  ONE contiguous chunk, 128 B aligned = 2 lines
+
+whole tree: 10,150 nodes; tree structure by getsizeof 21.3 MB (tuples 10.7 MB, int keys 5.3 MB, items + keys + nodes lists 4.7 MB, BNodes 0.5 MB); records: 68 MB of RSS, see results/baseline/memory_footprint_release.txt
+hardware blocks for all nodes: 10,150 x 128 B = 1.3 MB, replacing the keys lists

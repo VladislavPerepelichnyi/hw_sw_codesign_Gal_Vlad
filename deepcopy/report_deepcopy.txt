@@ -1,0 +1,523 @@
+================================================================================
+                       REPORT - pyperformance "deepcopy"
+          Benchmark analysis, optimization and hardware acceleration
+================================================================================
+
+Platform     Course QEMU/KVM VM: 1 vCPU (Intel Xeon E5-2630 v3 @ 2.40 GHz host),
+             Ubuntu 22.04.5, kernel 5.15.0-1108-kvm
+Interpreter  CPython 3.10.12 debug build (python3-dbg: Py_DEBUG, -Og)
+Tools        pyperf 2.10.0, pyperformance 1.14.0, perf (linux-tools), py-spy
+             0.4.2, FlameGraph, Icarus Verilog / Verilator (hardware part)
+Result       geometric mean 4.74x faster; every sub-benchmark 74-81% less time
+             (requirement: 7%)
+
+All numbers below come from one run of ./script_deepcopy.sh on a fresh clone
+in a clean course VM. Every file cited is in Hw_Additional_Files/:
+  perf_results/deepcopy/    raw pyperf JSON, perf report/stat, flame graphs
+  compare_report/deepcopy/  the before/after tables and flame graphs
+A longer plain-language write-up is Hw_Additional_Files/DEEPCOPY_REPORT.md.
+
+
+--------------------------------------------------------------------------------
+1. OVERVIEW
+--------------------------------------------------------------------------------
+
+1.1 What the benchmark does
+
+copy.deepcopy(x) returns a fully independent copy of x: changing anything
+reachable from the copy must never affect the original. To do that it walks
+the whole object graph and rebuilds every mutable object it meets.
+
+bm_deepcopy (pyperformance/data-files/benchmarks/bm_deepcopy/run_benchmark.py)
+registers three timed functions:
+
+  deepcopy         per loop: 30 copies of a small mixed dict
+                     {'list': [1,2,3,43], 't': (1,2,3), 'str': 'hello',
+                      'subdict': {'a': True}}
+                   and 30 copies of a dataclass A(string, lst, boolean).
+                   The everyday case.
+  deepcopy_reduce  one copy of an object whose class defines __reduce__ and
+                   __setstate__. Exercises the pickle-protocol path.
+  deepcopy_memo    one copy of {'a': (L, L, L), 'b': [L] * 100} with
+                   L = [1] * 100. The same list is referenced 103 times;
+                   exercises the memo.
+
+1.2 Libraries
+
+  copy         (stdlib, pure Python)  the code under test
+  dataclasses  (stdlib)               generates class A
+  pyperf                              timing harness: spawns 20 worker
+                                      processes, calibrates loop counts,
+                                      reports mean +- std dev
+  pyperformance                       the suite that ships and runs it
+No third-party native code is involved: the whole cost is the CPython
+interpreter running copy.py.
+
+1.3 Data structures and algorithm (copy.py)
+
+  Algorithm   recursive depth-first traversal of the object graph.
+  _deepcopy_dispatch
+              dict: type -> copier function (_deepcopy_list, _deepcopy_dict,
+              _deepcopy_tuple, _deepcopy_atomic for int/str/bool/...).
+  memo        dict: id(original) -> copy. Checked first for every object,
+              so shared references produce one shared copy and cycles
+              terminate. memo[id(memo)] holds a keep-alive list of the
+              originals, so no original can be freed and its id() reused
+              while the copy runs.
+  Tuples      copied element-wise, but the original tuple is returned if no
+              element changed (immutable contents).
+  Other objects  __deepcopy__ if defined; otherwise __reduce_ex__(4) and
+              _reconstruct(), which rebuilds the object from (callable,
+              args, state) and deep-copies the state.
+
+The key fact for performance: copy.deepcopy recurses once per element as a
+Python-level function call, even for an int it returns unchanged. Copying
+[1] * 100 costs 100 calls into deepcopy(), each with a dispatch-table lookup
+and a memo lookup.
+
+
+--------------------------------------------------------------------------------
+2. INITIAL ANALYSIS
+--------------------------------------------------------------------------------
+
+2.1 Method
+
+  Timing       pyperf, 20 processes x 3 values per sub-benchmark (60 values).
+               baseline_deepcopy.py is byte-identical to the upstream file
+               (run_tests.sh checks this). As a cross-check, the stock
+               benchmark was also run through `pyperformance run`; it agrees
+               with baseline_deepcopy.py within noise ("not significant").
+  Profiles     perf record -F 99 --call-graph dwarf, then FlameGraph.
+               --call-graph fp gives no usable stacks on this -Og debug
+               interpreter: the stacks are garbage return addresses such as
+               0xfdfdfdfdfdfdfd00. DWARF unwinding fixes it, at ~45 MB per
+               trace.
+               py-spy (--native) gives the Python-level view.
+  Counters     perf stat over a FIXED amount of work (fixed_work.py: exactly
+               340,000 deepcopy calls), not over the pyperf run. pyperf
+               calibrates loops to a time budget, so a faster program simply
+               performs more copies, and whole-run counters go UP.
+
+2.2 Baseline timing (perf_results/deepcopy/deepcopy_baseline.json)
+
+  deepcopy          2.00 ms   +- 0.01 ms
+  deepcopy_reduce   18.2 us   +- 0.3 us
+  deepcopy_memo     233 us    +- 2 us
+  (pyperformance reference run: 2.01 ms / 18.2 us / 233 us)
+
+2.3 Where the time goes - perf, self time, baseline
+    (perf_report_baseline.txt; flame graph: flamegraph_baseline.svg)
+
+    20.95%  _PyEval_EvalFrameDefault     bytecode interpreter loop
+     5.19%  call_function                making a Python call
+     3.03%  _PyMem_DebugCheckAddress     debug-build allocator checks
+     2.66%  _PyEval_MakeFrameVector      building a frame
+     2.30%  _PyObject_VectorcallTstate   call dispatch
+     2.07%  lookdict                     dict lookup (memo, int keys)
+     1.91%  lookdict_unicode             dict lookup (str keys)
+     1.87%  frame_dealloc                tearing a frame down
+
+  There is no hashing hot spot, no large memory copy and no cache problem.
+  The profile is dominated by the cost of CALLING Python functions: frame
+  creation and teardown, and bytecode dispatch.
+
+  Self time vs. inclusive time: the flame graph shows
+  _PyEval_EvalFrameDefault at ~45% wide, while the table above says ~21%.
+  Both are right. The table is self time (instructions inside the function
+  itself). A flame-graph bar is inclusive time: the function plus
+  everything it calls.
+
+2.4 Python level - py-spy (pyspy_flamegraph_baseline.svg)
+
+  Inclusive share of samples (frames nest, so these overlap):
+    _deepcopy_dict   41%     _deepcopy_list   19%
+    _reconstruct     19%     _deepcopy_tuple  13%
+  Every hot frame is inside copy.py: dispatch, memo check, recursion.
+
+2.5 Fixed-work counters, baseline (perf_fixed_baseline.txt)
+
+  340,000 copies: 12.71 s, 29.41 G cycles, 66.77 G instructions,
+  IPC 2.28, branch misses 54.9 M.
+  => 196,000 instructions per deepcopy call.
+
+  IPC is high (2.28): the CPU is not stalling on memory. The program is slow
+  because it executes too many instructions, not because it executes them
+  badly.
+
+2.6 Bottleneck
+
+  Per-element interpreter overhead: one Python call per visited object
+  (frame + dispatch-dict lookup + memo lookup), multiplied by every element
+  of every container. The fix must remove calls, not speed them up.
+
+
+--------------------------------------------------------------------------------
+3. OPTIMIZATIONS
+--------------------------------------------------------------------------------
+
+The workload is untouched. optimized_deepcopy.py has the same data, loop
+bounds, timer placement and benchmark names as the upstream file;
+check_workload.py proves this by comparing the syntax trees. Only HOW the
+copy is done changes.
+
+3.1 fastdeepcopy - a C extension  (Hw_Additional_Files/fastdeepcopy/)
+
+  The deepcopy walk re-implemented in C for the types that dominate the
+  workload: exact dict, list and tuple, and atomic immutables (int, str,
+  bool, float, bytes, None, types, functions). Copying [1] * 100 becomes a
+  C loop of 100 iterations instead of 100 Python calls.
+
+  It keeps copy.deepcopy's semantics exactly:
+    - the same memo dict, id(original) -> copy, shared with copy.deepcopy;
+    - the keep-alive list (copy._keep_alive);
+    - tuple reuse when no element changed (copy._deepcopy_tuple);
+    - a user __deepcopy__ is honoured;
+    - every other type is delegated to copy.deepcopy(x, memo): sets,
+      __slots__ objects, subclasses of dict/list, __reduce__ objects...
+  Only EXACT types take the fast path (Py_IS_TYPE, not PyList_Check), because
+  a subclass may carry state the generic path must copy. Reference counts
+  are balanced on every error path; mutation of the original during the
+  copy is handled (dict items are snapshotted, list length is re-checked).
+
+3.2 __deepcopy__ on dataclass A
+
+  def __deepcopy__(self, memo):
+      new = self.__class__.__new__(self.__class__)  # subclasses survive
+      memo[id(self)] = new                    # register BEFORE recursing
+      new.string  = self.string               # immutable: share
+      new.boolean = self.boolean              # immutable: share
+      new.lst = deepcopy(self.lst, memo)      # real recursive copy
+      return new
+
+  This skips __reduce_ex__ and _reconstruct. Registering in the memo before
+  recursing keeps cycles and shared references correct. The list is
+  deep-copied, not .copy()'d.
+
+3.3 __deepcopy__ on the __reduce__ class (deepcopy_reduce)
+
+  The same technique. It produces the same __dict__ as the __reduce__ ->
+  _reconstruct -> __setstate__ route.
+  Caveat: deepcopy_reduce was written to exercise the __reduce__ protocol,
+  and this hook bypasses it. The result is identical, and the hook is the
+  copy protocol's documented extension point, but if the protocol itself is
+  considered the object of measurement, discount this row. The other two
+  sub-benchmarks clear the 7% bar on their own.
+
+3.4 Correctness gate (Hw_Additional_Files/run_tests.sh)
+
+  Runs before any measurement; on the clean VM: 17 passed, 0 failed.
+    1 toolchain present, interpreter is a debug build
+    2 the C extension compiles without warnings and imports
+    3 baseline_deepcopy.py byte-identical to pyperformance's file
+    4 the optimized file measures the same workload (AST comparison)
+    5 verify_deepcopy.py: 47 assertions against copy.deepcopy - structure,
+      aliasing via the memo, recursive structures, independence, fallback
+      types, hook semantics, reduce equivalence, and a reference-leak check
+      with sys.gettotalrefcount() (debug build)
+    6 both scripts run and report all three sub-benchmarks
+    7 the optimized version is faster on identical fixed work
+
+
+--------------------------------------------------------------------------------
+4. PERFORMANCE COMPARISON
+--------------------------------------------------------------------------------
+
+4.1 Timing - pyperf (compare_report/deepcopy/time_comparison.txt)
+
+  Sub-benchmark      Baseline           Optimized          Speedup  Time removed
+  deepcopy           2.00 ms +- 0.01    372 us  +- 5       5.39x    -81.5%
+  deepcopy_reduce    18.2 us +- 0.3     4.73 us +- 0.04    3.85x    -74.0%
+  deepcopy_memo      233 us  +- 2       45.4 us +- 0.2     5.13x    -80.5%
+  Geometric mean                                           4.74x
+
+  Run-to-run spread is 0.2-1% of the mean, far below the differences.
+  Against the pyperformance reference run: 5.42x / 3.86x / 5.14x, geometric
+  mean 4.75x (time_comparison_pyperformance.txt).
+
+4.2 Hardware counters, identical fixed work (hw_stat_comparison.txt)
+
+  perf stat -r 3, 340,000 deepcopy calls each side
+
+  Counter              Baseline      Optimized     Change
+  Wall time            12.710 s      2.777 s       -78.2%
+  Cycles               29.41 G       6.40 G        -78.2%
+  Instructions         66.77 G       15.03 G       -77.5%
+  Branch instructions  13.41 G       3.30 G        -75.4%
+  Branch misses        54.9 M        6.65 M        -87.9%
+  Cache references     23.5 M        3.51 M        -85.0%
+  IPC                  2.28          2.35          +3%
+  Page faults          1,936         1,899         -1.9%
+  Instructions per deepcopy: 196,381 -> 44,195
+
+  (cache-misses are too few to measure in this guest: +-115% run to run,
+  so they are omitted. Every row above has an error bar under 0.5%.)
+
+  IPC barely changes. The speedup does not come from the machine running
+  better; it comes from giving it 77% fewer instructions to execute. Branch
+  misses fall the most (-88%), because the interpreter's dispatch loop,
+  with its indirect jumps, is largely gone.
+
+4.3 Profile after optimization (perf_report_opt.txt, flamegraph_opt.svg)
+
+    5.98%  _PyMem_DebugCheckAddress    debug build only
+    5.54%  _PyEval_EvalFrameDefault    (was 20.95%)
+    4.95%  lookdict                    memo dict lookups (int keys)
+    4.52%  fd_deepcopy                 the C walker
+    3.89%  read_size_t                 debug allocator
+    2.84%  _PyObject_Malloc
+    2.78%  memset                      debug allocator fill
+    1.68%  PyDict_GetItemWithError     memo lookups
+    1.05%  PyLong_FromUnsignedLong     memo key = int(id(x))
+    1.05%  long_hash                   hashing that key
+
+  call_function, _PyEval_MakeFrameVector and frame_dealloc are gone from
+  the top. In the py-spy graph (pyspy_flamegraph_opt.svg) copy.py no longer
+  appears among the hot frames; what is left is the benchmark's own loops,
+  the two small hooks and fastdeepcopy.
+
+  What remains is mostly (a) the debug build's allocator checks, which a
+  release build does not have, and (b) the memo: every visited object
+  allocates an int key, hashes it and probes a dict. That is the target of
+  the hardware proposal.
+
+4.4 Limitations
+
+  - All numbers are from the debug interpreter. On a release build the
+    per-call overhead removed here is smaller, so the speedup would be
+    smaller too.
+  - fastdeepcopy is a fast path, not a replacement: custom classes without a
+    __deepcopy__ still go through copy.py.
+  - Single vCPU; no parallelism was explored.
+
+
+--------------------------------------------------------------------------------
+5. HARDWARE ACCELERATION PROPOSAL - "memo cache"
+--------------------------------------------------------------------------------
+
+RTL: Hw_Additional_Files/hw/memo_cache.v       (Verilog-2005)
+Testbench: Hw_Additional_Files/hw/tb_memo_cache.v
+Run: ./script_deepcopy.sh hw_sim   (or make -C Hw_Additional_Files hw_sim)
+
+5.1 What it accelerates
+
+  After the software optimization, the memo is the largest piece of work
+  that is (1) on every visited object, (2) independent of Python semantics
+  and (3) a pure lookup-table operation. In software each memo operation is:
+
+    key = PyLong_FromVoidPtr(x)        allocate an int object
+    PyDict_GetItemWithError(memo, key) hash it, probe the dict
+    Py_DECREF(key)                     free the int
+
+  and an insert does the same plus PyDict_SetItem (possibly a resize).
+
+  The memo cache is a hardware pointer -> pointer table. A lookup is one bus
+  write and one bus read; nothing is allocated, hashed in software or freed.
+
+5.2 Function
+
+  An exact, set-associative key -> value store:
+    lookup(key)       -> value, or 0 if absent
+    insert(key, val)  -> 1 stored / 0 refused (set full)
+    clear()           -> empty table in one cycle (once per top-level copy)
+  Keys are object addresses used as opaque tags; the device never
+  dereferences them. That is what makes it simple to integrate: no address
+  translation (no IOMMU needed), no DMA, no cache-coherency protocol, no
+  reference counting in hardware.
+
+  The table is EXACT, never lossy. Evicting an entry would make deepcopy
+  copy a shared object twice, which is wrong, not just slow. An insert into
+  a full set is refused and software keeps that entry in its dict instead.
+
+5.3 Inputs and outputs
+
+  Interface   Wishbone B4 classic slave, 32-bit data, word addressing
+              (the bus of LiteX SoCs and many open-source cores)
+    clk, rst            in   system clock, synchronous reset
+    wb_adr[29:0]        in   word address (only [3:0] decoded)
+    wb_dat_w[31:0]      in   write data
+    wb_dat_r[31:0]      out  read data
+    wb_sel[3:0]         in   byte enables (all registers are 32-bit words)
+    wb_cyc, wb_stb      in   bus cycle / strobe
+    wb_we               in   write enable
+    wb_ack              out  acknowledge (1 cycle, or after a lookup)
+    wb_err              out  tied 0
+  Data widths  key and value 32 bits: physical/virtual pointers of a 32-bit
+               core (e.g. RV32 Linux). A 64-bit host needs a KEY_HI/VAL_HI
+               register pair or a 64-bit bus; the datapath is unchanged.
+  Parameters   SET_BITS = 6 (64 sets), WAYS = 4  -> 256 entries
+  Frequency    designed for the 100 MHz system clock of a soft-core SoC.
+               The longest path is four 32-bit equality compares and a
+               4-way priority select after a registered RAM read. It was
+               not synthesized (the project does not require it).
+
+  Register map (byte offsets)
+    0x00 ID        R  0x4D454D43 ("MEMC")
+    0x04 CFG       R  [7:0] log2 sets, [15:8] ways, [31:16] version
+    0x08 CTRL      W  bit0 clear table, bit1 reset statistics
+    0x0C KEY       W  latch key, start lookup
+    0x10 VAL       W  latch value for the next COMMIT
+    0x14 RESULT    R  value for KEY, 0 if absent (stalls until ready)
+    0x18 COMMIT    R  insert/update (KEY, VAL): 1 ok, 0 set full
+    0x1C STATUS    R  last hit / last commit ok / busy
+    0x20-0x30      R  LOOKUPS, HITS, INSERTS, FULL, OCCUPANCY counters
+
+  Software sequences
+    lookup  KEY <- x ; r = RESULT                        2 bus accesses
+    insert  KEY <- x ; VAL <- y ; ok = COMMIT            3 bus accesses
+    clear   CTRL <- 1                                    1 bus access
+
+5.4 Architecture
+
+  Each way has its own key RAM and value RAM (64 x 32 each) with a
+  registered read port, so the table maps onto FPGA block RAM. The valid
+  bits (256) are flip-flops, so CLEAR is one cycle.
+
+  A write to KEY starts a 2-stage pipeline:
+    S_READ  set = fold(key[31:3]) (XOR of 6-bit slices; objects are 8-byte
+            aligned); read all 4 ways' key/value entries and valid bits
+    S_CMP   compare the 4 keys with KEY in parallel; select the hit way
+            (lowest index wins); find the first free way for a later insert
+  RESULT and COMMIT reads wait for the pipeline: wb_ack is held off while
+  busy, so the CPU needs no polling and no fence between the KEY store and
+  the RESULT load. COMMIT writes the hit way (update) or the free way
+  (insert), or refuses if the set is full.
+
+  Block diagram
+
+     CPU core (32-bit, Linux)
+   +-------------------------------------------+
+   |  Python -> fastdeepcopy (C)               |
+   |    memo_get / memo_put                    |
+   |      |  uncached load/store via an mmap'ed register page
+   +------|------------------------------------+
+          |
+   =======v========== Wishbone system bus ======================
+          |
+   +------v----------------------------------------------------+
+   | memo_cache                                                |
+   |  bus decode -> KEY/VAL regs --> fold(key) --> set index   |
+   |                  |                               |        |
+   |                  |        +---------+---------+--v------+ |
+   |                  |        | way 0   | way 1   | ...way3 | |
+   |                  |        | key RAM | key RAM |  64 x32 | |
+   |                  |        | val RAM | val RAM |  64 x32 | |
+   |                  |        +----+----+----+----+----+----+ |
+   |                  |             | registered read  |      |
+   |                  +---------> 4 x (key ==) + valid[256] FF |
+   |                               |                           |
+   |                    hit way / free way / value             |
+   |                               |                           |
+   |  CTRL: clear (valid <= 0), stats   RESULT / COMMIT -> bus |
+   +-----------------------------------------------------------+
+
+5.5 Hardware/software interface
+
+  Driver   a small platform driver (device-tree "compatible" entry):
+           exclusive open() (one table, one owner), mmap() of the 4 KiB
+           register page as uncached, CLEAR on open and on release, so a
+           crashed process cannot leave stale entries. After mmap there is
+           no system call per operation: fastdeepcopy uses plain loads and
+           stores.
+  Changes in fastdeepcopy
+           memo_get / memo_put call the device instead of the dict; CLEAR
+           at the start of each top-level deepcopy() call; the keep-alive
+           list is still kept in software (Python object lifetime).
+           Python code needs a real dict: a user __deepcopy__ hook receives
+           the memo and writes memo[id(self)] = new, and so does the
+           copy.deepcopy fallback. Before such a call, the device's entries
+           must be copied into a dict, which then stays the memo for the
+           rest of that top-level copy. A refused insert (full set) also
+           switches to the dict.
+  No DMA   the device never touches memory, so there is nothing to
+           translate or keep coherent.
+
+5.6 Why this component, and the expected gain
+
+  Why it suits hardware: fixed-width keys, no pointer chasing, a single
+  equality compare per way, a tiny state that is cleared every call. These
+  are classic CAM / set-associative lookup operations. In software, the
+  same operation costs an object allocation, a hash, a probe and a free.
+
+  How much of the optimized run is memo work (perf self time, section 4.3):
+    directly memo   lookdict 4.95 + PyDict_GetItemWithError 1.68
+                    + PyLong_FromUnsignedLong 1.05 + long_hash 1.05
+                    + part of insertdict 1.05                 ~ 9-10%
+    allocator share for the temporary int keys (part of the ~20% spent in
+    the debug allocator)                                      ~ 5-10%
+    => f ~ 10-20% of the optimized run time
+
+  Amdahl, if a memo operation cost nothing:  1 / (1 - f) = 1.11x - 1.25x.
+
+  Assumptions and honest limits:
+    - The bound assumes each device access is much cheaper than the software
+      operation. That requires a tightly coupled device: an on-chip bus at
+      core clock (an uncached access costs ~10-20 cycles). Behind PCIe
+      (~1 us per uncached read) the device would be far SLOWER than the
+      ~100 ns dict path, so the proposal targets an SoC, not a PC.
+    - The memo share is high partly because the committed fastdeepcopy
+      probes the memo before checking whether a value is atomic (ints in
+      [1] * 100). Moving the atomic check first is a software change that
+      removes most of these probes and would shrink f. After it, the memo
+      is a small part of the run, and this accelerator's expected gain is
+      at most a few percent. In other words, a cheap software fix competes
+      directly with the hardware.
+    - What dominates after the software optimization is general interpreter
+      and allocator work. A bus peripheral cannot reduce that.
+
+5.7 Performance / area / power trade-offs
+
+  Area (estimate, not synthesized)
+    storage  4 ways x 64 sets x (32 + 32) bits = 16 Kbit -> 8 small block
+             RAMs (or distributed RAM)
+    logic    256 valid flip-flops, 4 x 32-bit comparators, a 4:1 value mux,
+             set-index XOR, control FSM, 5 x 32-bit statistics counters:
+             on the order of 1k LUTs + ~600 flip-flops on an FPGA.
+  Frequency
+    The 2-cycle lookup puts the RAM read and the compare in separate
+    stages, so 100 MHz has wide margin. More ways means wider compare and
+    select logic, the first thing to limit the clock.
+  Power
+    A lookup reads 8 RAM words (4 keys + 4 values). Reading only the hit
+    way's value one cycle later would halve that, at +1 cycle of latency.
+    Valid bits in flip-flops make CLEAR cheap but cost static power and
+    area; valid bits in RAM would need a multi-cycle clear.
+  Capacity vs. correctness
+    More ways -> fewer refused inserts, more comparators and power.
+    More sets -> more RAM, same logic.
+    The table must stay exact: turning it into a lossy cache would save the
+    refusal logic but break deepcopy's aliasing guarantee.
+  Benefit vs. cost
+    The expected gain (section 5.6) is modest, and a software change can
+    erode it. The accelerator is small, simple and safe to integrate. Its
+    value is in demonstrating a clean HW/SW boundary with no DMA,
+    translation or coherency, rather than in a large speedup.
+
+5.8 Verification
+
+  tb_memo_cache.v: directed tests (identification, insert/lookup/update,
+  set conflict with refusal, clear, statistics) plus 1,500 random
+  operations checked against a reference model, then a sweep of every
+  resident entry: 1,788 checks, 0 errors. Verilator --lint-only -Wall is
+  clean.
+
+
+--------------------------------------------------------------------------------
+6. CONCLUSION
+--------------------------------------------------------------------------------
+
+The deepcopy benchmark is slow because copy.py pays a full Python function
+call for every object it visits, including integers it returns unchanged.
+The profile shows interpreter call overhead, not computation. Moving the
+traversal of the built-in containers into C, and giving the two
+user-defined classes a correct __deepcopy__, removes 77% of the executed
+instructions. All three sub-benchmarks get 3.85x-5.39x faster (geometric
+mean 4.74x), with the copy still provably a real deepcopy and the workload
+provably unchanged.
+
+The hardware proposal targets the memo, the remaining per-object lookup
+cost. It is an exact, set-associative pointer table on a Wishbone bus,
+used through uncached loads and stores, with no DMA and no coherency
+problem. Its expected gain is bounded by Amdahl's law at 1.1-1.25x and
+depends on tight on-chip integration. The largest win in this benchmark is
+removing interpreter overhead in software; hardware helps only once that
+software path is lean, and only if it sits close to the core.

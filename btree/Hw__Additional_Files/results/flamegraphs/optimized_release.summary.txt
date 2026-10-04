@@ -1,0 +1,41 @@
+file: results/flamegraphs/optimized_release.folded   total samples: 14050000000
+
+python function (inclusive)               samples      %
+BTree.__setitem__                        10000000    0.1
+BNode.get_position_opt                    8000000    0.1
+BNode.insert_item                         8000000    0.1
+BNode.is_full                             8000000    0.1
+BNode.is_leaf                             6000000    0.0
+BTree.__iter__                            6000000    0.0
+BNode.search                              4000000    0.0
+BTree.iterkeys                            4000000    0.0
+BNode.__iter__                            2000000    0.0
+BNode.delete.<locals>.is_big              2000000    0.0
+BTree.__delitem__                         2000000    0.0
+BTree.add                                 2000000    0.0
+Random.randbytes                          2000000    0.0
+Record.__init__                           2000000    0.0
+_simple                                   2000000    0.0
+
+CPython subsystem (inclusive, any frame)  samples      %
+GC (gc_collect_main & visitors)          1358000000    9.7
+allocator (PyObject_Malloc/Free, _PyMem_) 138000000    1.0
+list.insert / ins1 / memmove             114000000    0.8
+list iteration (listiter_next/enum_next) 98000000    0.7
+
+leaf symbol (self)                        samples      %
+_PyEval_EvalFrameDefault                 5958000000   42.4
+gc_collect_main.lto_priv.0               702000000    5.0
+visit_reachable.lto_priv.0               656000000    4.7
+_PyFunction_Vectorcall                   516000000    3.7
+list_item.lto_priv.0                     476000000    3.4
+deduce_unreachable                       446000000    3.2
+_PyEvalFrameClearAndPop.lto_priv.0       422000000    3.0
+internal_bisect_left.lto_priv.0          358000000    2.5
+py_trampoline_evaluator.lto_priv.0       334000000    2.4
+list_traverse.lto_priv.0                 294000000    2.1
+initialize_locals.lto_priv.0             280000000    2.0
+long_richcompare.lto_priv.0              260000000    1.9
+tupletraverse.lto_priv.0                 252000000    1.8
+subtype_traverse.lto_priv.0              234000000    1.7
+PyObject_Vectorcall                      218000000    1.6

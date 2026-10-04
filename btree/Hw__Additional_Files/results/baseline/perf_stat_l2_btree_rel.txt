@@ -1,0 +1,17 @@
+# started on Sat Oct  3 20:28:10 2026
+
+
+ Performance counter stats for '../.venv/bin/python scripts/profile_btree.py --loops 1 --bench benchmark/original/bm_btree/run_benchmark.py':
+
+         106329910      l2_rqsts.all_demand_data_rd:u                                     (79.95%)
+          59717280      l2_rqsts.demand_data_rd_hit:u                                     (79.93%)
+          46588186      l2_rqsts.demand_data_rd_miss:u                                     (80.05%)
+         246610376      l2_rqsts.references:u                                         (80.02%)
+          99264973      l2_rqsts.miss:u                                               (80.05%)
+
+       3.934304805 seconds time elapsed
+
+       3.850009000 seconds user
+       0.059910000 seconds sys
+
+

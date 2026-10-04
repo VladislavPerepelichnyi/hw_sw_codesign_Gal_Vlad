@@ -1,0 +1,185 @@
+AI tool prompts - deepcopy benchmark
+====================================
+
+Tool: Claude Code (Anthropic), used as a coding assistant in a terminal session
+that could run commands on the course server and in the QEMU VM.
+
+Below are the prompts that shaped the project's design and its key ideas, in
+chronological order. Purely operational messages (terminal/tmux housekeeping,
+"continue", log-in details) are left out; "[...]" marks a trimmed
+housekeeping sentence inside a prompt. Spelling is as typed.
+
+
+--------------------------------------------------------------------------------
+1. Review of the first optimization against the requirements        2026-09-16
+--------------------------------------------------------------------------------
+In this chat, you will help me analyze my optimization against the project
+requirements. I choosed deep copy. For now there is no need in RTL.
+I am attaching the server connection instructions and the project description.
+Please familiarize yourself with the project structure.
+[...]
+Also, evaluate how correctly I have completed the task so far and whether I have
+improved the benchmark as requested. For now deep copy only
+
+
+--------------------------------------------------------------------------------
+2. Fix the issues, write a C module, write the report                2026-09-16
+--------------------------------------------------------------------------------
+Your critique is excellent, but please completely disregard points 6 and 7 for
+now; they aren't relevant at this stage. Git is precisely the tool for handling
+rollbacks and version management, while the README prompt and dependency
+installation are cosmetic tweaks to be addressed at the end of the project.
+
+Please fix the issues identified in your comments. Once finished, commit and push
+the changes to the `draft` branch from the virtual machine.
+
+Also, try to improve other benchmark functions; perhaps we could write a custom C
+module optimized specifically for this benchmark.
+
+Additionally, please write an optimization report (`DEEPCOPY_REPORT.md`) in plain
+language, providing evidence (such as `perf` statistics and a flame graph, if
+you—as an LLM—have the capability to generate one).
+
+
+--------------------------------------------------------------------------------
+3. Clean Makefile and automated tests                                 2026-09-20
+--------------------------------------------------------------------------------
+We practically finished the project last time.
+However, the Makefile is still not quite clean, as it contains incorrect targets
+for measurements.
+Create a clean Makefile that includes a help target, as well as a script to
+automatically run the tests.
+[...]
+
+
+--------------------------------------------------------------------------------
+4. Presentation                                                       2026-09-22
+--------------------------------------------------------------------------------
+Please create a seven-slide LaTeX presentation. There is no need for a title
+slide or an introduction, as a colleague will handle that part.
+You can leave placeholders for images so I can insert them myself.
+Here is my draft outline:
+1. Overview of the deep copying benchmark and the module's architecture
+2. Overview of how the built-in `deepcopy` module works
+3. Overhead analysis: flame graph and statistics
+4. Custom C-based module for copying containers with proper garbage collection
+   handling
+5. Further explanation of the module; note that it delegates to the standard
+   `copy.py` module for custom classes
+6. Optimization at the Python class level
+7. Performance evaluation (execution time, instruction count, etc.)
+
+Also keep original src code of latex to give me opporunity change it
+
+
+--------------------------------------------------------------------------------
+5. Reading the flame graph: self time vs. total time                  2026-09-23
+--------------------------------------------------------------------------------
+so in the report of deep copy I see that there is 20 % of Py_Eval_EvalFrame
+default but I also see that in the current flame gruph this function takes about
+45 %. What happened ?
+
+
+--------------------------------------------------------------------------------
+6. Hardware: run the benchmark on a simulated RISC-V SoC              2026-09-26
+--------------------------------------------------------------------------------
+I'd like to try implementing a hardware accelerator for this benchmark as well.
+Although the project doesn't strictly require synthesizing the module—
+conceptually explaining it would suffice—I plan to take the following approach:
+first, boot Linux in Verilator using the BOOM processor and run the benchmark
+directly within that environment (measuring execution time without `perf`).
+Next, I'll implement a hardware-based object traverser or some form of caching
+mechanism to further accelerate the benchmark at the hardware level.
+Here is the detailed documentation:
+https://docs.boom-core.org/en/latest/
+And here is the SoC:
+https://github.com/ucb-bar/chipyard
+Feel free to use the internet to look up information on running the simulation.
+To start, you need to understand the basics of running the simulation.
+[...]
+Try to build the project and boot Linux with console access (so we can run our
+Python benchmark later).
+Ideally, the Linux image should already have Python 3 installed.
+
+
+--------------------------------------------------------------------------------
+7. Switch from BOOM/Chipyard to LiteX                                 2026-09-26
+--------------------------------------------------------------------------------
+perfect. But i tkink there is too much head pain with it. Please stop simulation
+of boom and temove BOOM artifacts. I think We will switch in litex ecosystem. I
+already installed in system python the litex soc builer and I am trying to
+simulate the SoC.
+
+
+--------------------------------------------------------------------------------
+8. Linux + Python on the LiteX simulation                             2026-09-26
+--------------------------------------------------------------------------------
+I've prepared the files for simulation in LiteX.
+The simulation runs, but it doesn't include Python.
+Also, we need to increase the simulated memory size.
+[...]
+This covers our unoptimized and optimized `deepcopy` implementations, but without
+`pyperformance`.
+I should also note that the loading process alone takes about 20 minutes, so it
+might be worth adding this benchmark to the initialization file (`init`).
+
+
+--------------------------------------------------------------------------------
+9. Feasibility check of a "smart DMA" accelerator                     2026-09-27
+--------------------------------------------------------------------------------
+Nice ! for now please read the HW_instr.md [...]. Before you imeplementing it ,
+say me if this "smart dma" can work or it'll time's lose?
+
+
+--------------------------------------------------------------------------------
+10. Decision: software atomic check first, then a hardware memo cache 2026-09-27
+--------------------------------------------------------------------------------
+1. Great, let's start with the software layer—specifically the `atomic` check,
+   as you mentioned.
+2. Even a 1.5–1.8x performance boost would be good (vs pure Software
+   accseleration, not original).
+3. Your cache idea is excellent; I think that's the one we'll implement instead
+   of that super-heavyweight project.
+Go ahead and implement it according to the plan—from the HW module all the way to
+the benchmark, following `HW_instr.md`.
+
+
+--------------------------------------------------------------------------------
+11. Evaluating the hardware result                                    2026-09-27
+--------------------------------------------------------------------------------
+So the hw module add 10% overhead I stead performance?
+
+
+--------------------------------------------------------------------------------
+12. Finding the real bottleneck for hardware                          2026-09-27
+--------------------------------------------------------------------------------
+I know the specification doesn't require this kind of synthesis, but I'm
+interested in testing my hardware module in practice and ensuring the project is
+high-quality. It will help me gain additional engineering knowledge.
+Let's consider instead which hardware module could actually improve the
+benchmark results.
+We already have a complete pipeline in place:
+Hardware with Wishbone interface -> integration into LiteX -> Linux driver ->
+usage in userspace.
+First, explain exactly what our hardware module does and what it accelerates.
+Explain why it likely didn't yield a performance boost and identify the
+bottleneck that a hardware accelerator could address.
+
+
+--------------------------------------------------------------------------------
+13. Prefetching idea                                                  2026-09-27
+--------------------------------------------------------------------------------
+Let's see—to modify the cache, we'd need to get into the SpinalHDL code (the
+Scala source), right?
+I think that could be a great idea—for instance, loading an entire page into the
+cache at once instead of just a single block.
+That way, we could implement prefetching.
+What do you think about that?
+
+
+--------------------------------------------------------------------------------
+14. Measure before building                                           2026-09-27
+--------------------------------------------------------------------------------
+In simple words you propuse to add a stream buffer ?
+
+yes, start with the bus monitor

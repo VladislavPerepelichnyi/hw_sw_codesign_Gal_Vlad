@@ -1,0 +1,24 @@
+# started on Sat Oct  3 11:16:51 2026
+
+
+ Performance counter stats for '/root/final_project_HW-SW_co_design/Hw_Additional_Files/venv/bin/python fixed_work.py --impl baseline' (3 runs):
+
+          12709.56 msec cpu-clock                 #    1.000 CPUs utilized            ( +-  0.13% )
+          12709.58 msec task-clock                #    1.000 CPUs utilized            ( +-  0.13% )
+       29408222107      cycles                    #    2.319 GHz                      ( +-  0.17% )  (74.96%)
+       66769411576      instructions              #    2.28  insn per cycle           ( +-  0.19% )  (87.48%)
+       13408994262      branch-instructions       #    1.057 G/sec                    ( +-  0.19% )  (87.47%)
+          54904858      branch-misses             #    0.41% of all branches          ( +-  0.53% )  (87.51%)
+        1056266239      bus-cycles                #   83.290 M/sec                    ( +-  0.20% )  (87.56%)
+          23451150      cache-references          #    1.849 M/sec                    ( +-  7.06% )  (87.51%)
+             27677      cache-misses              #    0.127 % of all cache refs      ( +-119.35% )  (49.95%)
+       29392707812      ref-cycles                #    2.318 G/sec                    ( +-  0.17% )  (62.44%)
+              1936      page-faults               #  152.660 /sec                     ( +-  0.05% )
+              1936      minor-faults              #  152.660 /sec                     ( +-  0.05% )
+                 0      major-faults              #    0.000 /sec                   
+               103      context-switches          #    8.122 /sec                     ( +-  5.89% )
+   <not supported>      LLC-loads                                                   
+   <not supported>      LLC-stores                                                  
+
+          12.70965 +- 0.00726 seconds time elapsed  ( +-  0.06% )
+

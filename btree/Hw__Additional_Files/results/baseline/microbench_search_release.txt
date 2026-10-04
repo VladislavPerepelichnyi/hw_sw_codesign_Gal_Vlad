@@ -1,0 +1,42 @@
+python 3.12.15  nodes=4096 fill=20 queries=400000
+average keys compared per linear-scan call on this mix: 10.73
+
+variant                                          min s   ns/call  speedup
+baseline: for/enumerate linear scan             0.4032    1008.0     1.00x
+while-loop linear scan                          0.3800     949.9     1.06x
+bisect_left(items, key=lambda)                  0.3405     851.2     1.18x
+bisect_left(items, key=named fn)                0.2887     721.8     1.40x
+bisect_left(parallel keys list)                 0.1410     352.4     2.86x
+(floor: trivial function call + loop)           0.0628     157.1
+
+Bytecode of the baseline scan loop body (per compared key):
+ 36           0 RESUME                   0
+
+ 38           2 LOAD_GLOBAL              1 (NULL + enumerate)
+             12 LOAD_FAST                0 (items)
+             14 CALL                     1
+             22 GET_ITER
+        >>   24 FOR_ITER                17 (to 62)
+             28 UNPACK_SEQUENCE          2
+             32 STORE_FAST               2 (position)
+             34 STORE_FAST               3 (item)
+
+ 39          36 LOAD_FAST                3 (item)
+             38 LOAD_CONST               1 (0)
+             40 BINARY_SUBSCR
+             44 LOAD_FAST                1 (key)
+             46 COMPARE_OP              92 (>=)
+             50 POP_JUMP_IF_TRUE         1 (to 54)
+             52 JUMP_BACKWARD           15 (to 24)
+
+ 40     >>   54 LOAD_FAST                2 (position)
+             56 SWAP                     2
+             58 POP_TOP
+             60 RETURN_VALUE
+
+ 38     >>   62 END_FOR
+
+ 41          64 LOAD_GLOBAL              3 (NULL + len)
+             74 LOAD_FAST                0 (items)
+             76 CALL                     1
+             84 RETURN_VALUE

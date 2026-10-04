@@ -1,0 +1,169 @@
+AI tool prompt log — HW/SW co-design project, btree benchmark
+=============================================================
+An AI coding assistant was used interactively in the project directory as a
+pair programmer. The author set the direction, the hypotheses to test and the
+design choices; the assistant carried out the measurements, wrote the code
+and documents from those instructions, and was corrected whenever its output
+did not match the intent. Each entry gives the instruction (condensed) and
+the outcome, in chronological order.
+
+--- 2026-09-17 ---------------------------------------------------------------
+
+[1]  Read the project brief and the pyperformance `btree` benchmark. Tell me
+     what the benchmark actually does, which data structure it implements and
+     where its time is likely to go, before we touch anything.
+     -> It is a textbook CLRS B-tree (minimum degree 16, so 15..31 keys per
+        node) over 200k records; one loop inserts, deletes and re-inserts
+        keys, runs a garbage collection, then iterates and looks keys up.
+        Deliverables summarised; release and debug interpreters set up.
+
+[2]  Measure first, with proper statistics and profiles, so we have a
+     baseline nobody can argue with. I want to see the real hot spot in a
+     flame graph, and I want a target that could reasonably become a
+     hardware unit later, so characterise the workload rather than guess.
+     -> The host clamped perf's sampling frequency; the assistant switched to
+        period sampling and produced release and debug profiles with Python
+        frames named. Statistics come from a 30-value pyperf run. Finding:
+        one method, the linear key scan inside each node, is about half the
+        loop; garbage collection is ~11 %, far less than the benchmark's own
+        docstring suggests.
+
+--- 2026-09-19 ---------------------------------------------------------------
+
+[3]  Textbooks say a B-tree is bound by the memory fetches and the key
+     comparisons are cheap. Under an interpreter I doubt that. Check it with
+     hardware counters and a working-set estimate before we decide what to
+     optimise.
+     -> IPC 1.5 and a 2 % L1 miss rate: the loop is instruction-bound. An
+        interpreted comparison costs hundreds of cycles, more than a node
+        fetch. The working set (~91 MB) exceeds the LLC, but the part the
+        search touches fits. Conclusion: attack instruction count.
+
+[4]  The fix is the obvious algorithmic one: the keys in a node are already
+     sorted, so replace the linear scan with a binary search done in C. But
+     it must not change the benchmark: same workload, same object graph the
+     GC benchmark measures, and a diff that shows exactly one replaced
+     function. Prove the trees are identical, do not assume it.
+     -> A parallel list of plain int keys per node searched with bisect_left,
+        one mirrored line per mutation; the function keeps its name with an
+        `_opt` suffix and is aliased so call sites are untouched. The
+        optimised file is generated mechanically from the original. An
+        equivalence test compares the two trees node by node through build,
+        delete, re-insert and replace. 5.04 s -> 3.09 s, 1.63x; the gc-only
+        variant is unchanged, so the gain is not from doing less GC.
+
+[5]  The flame graphs are unreadable at this depth. I want graphs that fit a
+     slide and show Python functions only.
+     -> A post-processor keeps the Python frames, shortens their names and
+        emits a zoomable SVG at a tenth of the depth; the full graphs stay
+        next to them.
+
+[6]  Now the hardware. The kernel is "where does a value rank in a sorted
+     vector of at most 31 keys": compare all keys in parallel and count. Write
+     it the way I write hardware, structurally, no loops or integers in the
+     always blocks, fitted to this benchmark with nothing configurable. Verify
+     it against the real tree, not against synthetic data only.
+     -> A 31-lane compare core with an explicit adder-tree popcount and two
+        pipeline stages. The assistant built Verilator from source (no
+        simulator on the host), recorded 3,000 node/query pairs from the
+        benchmark's own tree, added corner cases, and checked the RTL against
+        a bit-exact Python model that is itself checked against bisect_left.
+
+--- 2026-09-21 ---------------------------------------------------------------
+
+[7]  Write the report in the required structure. Every number must trace to
+     a measurement file, and the overview must state the tree's order in the
+     conventions a reader may know (CLRS, Knuth, Bayer).
+     -> Report drafted and iterated with the author.
+
+[8]  The software interface should be an instruction and nothing more: give
+     the unit the node's address and the key, get the position back. No
+     memory-mapped registers, no driver. For that the node's keys must sit in
+     one contiguous block the hardware can read, with the count stored in it.
+     -> `nsrch rd, rs1 = node address, rs2 = query`. The unit fetches the
+        block through the L1 D-cache line port and reads the count from the
+        block's header. Software keeps one aligned array per node, maintained
+        at the same places as the key list, with a software fallback.
+
+[9]  I want a block diagram a hardware engineer would recognise: the unit
+     inside the core next to the ALU and LSU, a zoom-out of its internals,
+     the cache hierarchy with honest widths, no prose inside the drawing.
+     -> A generator script draws the figure on a grid with orthogonal wiring
+        and width marks; refined with the author over several rounds.
+
+[10] Explain honestly why the accelerator will not beat the software fix by
+     much under Python, so the report does not oversell it.
+     -> Amdahl's law: about half the loop is not the search, and each call
+        into the instruction still pays the interpreter's call overhead.
+        Projected ~1.7x against a 1.96x floor; the unit pays off for compiled
+        callers, where the search is memory-bound as the theory assumes.
+
+--- 2026-10-02 / 03 ----------------------------------------------------------
+
+[11] The keys are sorted, so the unit should not wait for the whole block:
+     compare each cache line as it arrives and stop at the first line that
+     holds a key at or above the query. First measure how often that happens
+     on the real tree, then build it.
+     -> Most searches end on an early line. A streaming variant was built and
+        simulated under the same conditions: fewer comparators, lower
+        latency, same memory traffic, all vectors pass.
+
+[12] Make the streaming unit the design we present, and keep the fixed unit
+     only as the reference it evolved from.
+     -> Files, scripts, report, design note and figure reorganised around
+        the streaming unit, with the fixed design as a comparison.
+
+[13] The keys here never exceed 200,000; 64-bit entries waste half the block.
+     Use 32-bit keys: the block halves to two cache lines and the lanes double
+     per line. Keys that do not fit take the software path.
+     -> RTL, testbenches, model, vectors, software sketch and figure
+        converted. Latency 7..9 cycles from issue to writeback, average 7.7;
+        the fixed design 10. The 64-bit variant is kept in the text as the
+        alternative.
+
+[14] I do not want the memory story inferred from totals. Read the counters
+     around each phase of the loop, and add experiments that separate the
+     search from the record accesses and from the garbage collector.
+     -> A script opens the hardware counters from inside the process and
+        reads them per phase, with three diagnostics. The LLC misses belong
+        to the garbage collector and to the shuffled-order inserts; the
+        in-order iteration that reads every record is prefetched, and the
+        node searches alone barely miss. The working-set and node-layout
+        probes became scripts the flows run, so every figure is reproducible.
+
+[15] Lay the repository out exactly as the project brief lists the
+     deliverables, make it self-contained, and structure the execution
+     script as the four stages the brief names. The hardware gets its own
+     flow.
+     -> Report, script, prompt log and README at the top; everything else
+        under one folder. The original and optimised benchmarks are
+        committed, so nothing depends on a local pyperformance copy. The
+        script's setup stage installs its own dependencies where it may;
+        the other three stages measure, profile and compare.
+
+[16] Our grading environment is the course VM, not the lab machine. Run the
+     whole flow inside the VM and make the report quote what the VM measures;
+     keep the lab run only as a cross-check and for what a virtual machine
+     cannot measure.
+     -> The VM needed a newer interpreter for named Python frames; setup
+        installs it. All four stages complete there: 3.11 s -> 1.94 s, 1.60x,
+        equivalence proven, both designs lint and simulate. Python-level
+        profiles in the VM come from the debug interpreter; the LLC counters,
+        which the virtual PMU does not expose, cite the bare-metal run.
+
+[17] Review the figure with me block by block: name things by what they are,
+     draw the pipeline registers as registers with their real fields, show
+     the two stop flags with their inputs, mark memory widths in bytes and
+     internal ones in bits, add a cycle-by-cycle view of the latency, and
+     remove every sentence I can say myself when presenting.
+     -> Figure regenerated after each change and checked at three times
+        print size for crossings and clipped text.
+
+[18] Be precise in the wording: a 32-bit slot is an "entry", not a word; the
+     unit copies the operands, it does not latch them; the valid mask is
+     recomputed every cycle, not stored; the adder tree only counts, the stop
+     decision is a separate OR of two flags; and, since the early exit
+     guarantees every earlier key was below the query, the carry into the
+     adder is a constant per line rather than a running total.
+     -> Wording fixed throughout; the last point is recorded as a possible
+        simplification of the datapath.

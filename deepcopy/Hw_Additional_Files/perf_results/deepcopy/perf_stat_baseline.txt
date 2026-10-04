@@ -1,0 +1,24 @@
+# started on Wed Sep 16 12:56:07 2026
+
+
+ Performance counter stats for 'python3-dbg baseline_deepcopy.py' (3 runs):
+
+          52076.35 msec cpu-clock                 #    0.988 CPUs utilized            ( +-  0.08% )
+          52077.27 msec task-clock                #    0.988 CPUs utilized            ( +-  0.08% )
+      118805757997      cycles                    #    2.282 GHz                      ( +-  0.11% )  (75.25%)
+      234626429437      instructions              #    1.98  insn per cycle           ( +-  0.06% )  (87.60%)
+       48279095640      branch-instructions       #  927.323 M/sec                    ( +-  0.04% )  (87.52%)
+         375402629      branch-misses             #    0.78% of all branches          ( +-  0.10% )  (87.57%)
+        4292810033      bus-cycles                #   82.454 M/sec                    ( +-  0.04% )  (87.58%)
+         501862635      cache-references          #    9.640 M/sec                    ( +-  0.48% )  (87.60%)
+           6531880      cache-misses              #    1.313 % of all cache refs      ( +-  4.69% )  (50.23%)
+      118714548962      ref-cycles                #    2.280 G/sec                    ( +-  0.12% )  (62.90%)
+            266332      page-faults               #    5.116 K/sec                    ( +-  0.00% )
+            266332      minor-faults              #    5.116 K/sec                    ( +-  0.00% )
+                 0      major-faults              #    0.000 /sec                   
+              6445      context-switches          #  123.793 /sec                     ( +-  0.11% )
+   <not supported>      LLC-loads                                                   
+   <not supported>      LLC-stores                                                  
+
+           52.6887 +- 0.0616 seconds time elapsed  ( +-  0.12% )
+

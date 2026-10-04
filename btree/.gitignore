@@ -1,0 +1,18 @@
+# virtual environments (created by ./script_btree.sh setup)
+.venv/
+.venv_dbg/
+venv/
+# third-party tools fetched/built by the scripts (FlameGraph clone, Verilator source build ~2 GB)
+tools/
+# (also holds the Verilator simulation objects: tools/sim/)
+# python caches
+__pycache__/
+*.pyc
+# raw perf recordings (regenerate with ./script_btree.sh flame); the SVG / folded / report files are kept
+*.perf.data
+*.perf.data.old
+flamegraphs_run.log
+compare_run.log
+flame_run.log
+# NFS silly-rename leftovers
+.nfs*
